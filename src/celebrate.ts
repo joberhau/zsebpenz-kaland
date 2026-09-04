@@ -8,61 +8,95 @@ const confettiWithShapeFromText = confetti as unknown as {
   shapeFromText: (opts: { text: string; scalar?: number }) => unknown
 }
 
-let sadShape: unknown = null
-let explosionShape: unknown = null
+const shapeCache = new Map<string, unknown>()
 
-function getSadShape(): unknown {
-  if (!sadShape) {
-    sadShape = confettiWithShapeFromText.shapeFromText({ text: '😢', scalar: 3 })
+function getShape(emoji: string, scalar = 3): unknown {
+  let shape = shapeCache.get(emoji)
+  if (!shape) {
+    shape = confettiWithShapeFromText.shapeFromText({ text: emoji, scalar })
+    shapeCache.set(emoji, shape)
   }
-  return sadShape
-}
-
-function getExplosionShape(): unknown {
-  if (!explosionShape) {
-    explosionShape = confettiWithShapeFromText.shapeFromText({ text: '💥', scalar: 3 })
-  }
-  return explosionShape
+  return shape
 }
 
 function shakeScreen(): void {
-  document.body.classList.add('shake')
-  window.setTimeout(() => document.body.classList.remove('shake'), 400)
+  document.body.classList.add('shake-big')
+  window.setTimeout(() => document.body.classList.remove('shake-big'), 600)
 }
 
-/** Bomb explosion for a fail (1), sad faces for a near-fail (2), confetti scaled by grade for 3-5. */
+function flashScreen(color: string): void {
+  const el = document.createElement('div')
+  Object.assign(el.style, {
+    position: 'fixed',
+    inset: '0',
+    pointerEvents: 'none',
+    zIndex: '9999',
+    background: color,
+    opacity: '0.6',
+    transition: 'opacity 0.6s ease-out',
+  })
+  document.body.appendChild(el)
+  requestAnimationFrame(() => {
+    el.style.opacity = '0'
+  })
+  window.setTimeout(() => el.remove(), 650)
+}
+
+function burstExplosion(delay: number, particleCount: number, spread: number, scalar: number) {
+  window.setTimeout(() => {
+    confetti({
+      particleCount,
+      startVelocity: 45,
+      gravity: 0.8,
+      spread,
+      ticks: 120,
+      origin: { y: 0.5, x: 0.5 },
+      shapes: [getShape('💥', scalar), getShape('🔥', scalar)] as never,
+      scalar,
+    })
+  }, delay)
+}
+
+/** Bomb explosion for a fail (1), sad rain for a near-fail (2), confetti scaled by grade for 3-5. */
 export function celebrateGrade(grade: Grade): void {
   if (grade === 1) {
     shakeScreen()
-    confetti({
-      particleCount: 24,
-      startVelocity: 35,
-      gravity: 0.9,
-      spread: 360,
-      ticks: 100,
-      origin: { y: 0.5, x: 0.5 },
-      shapes: [getExplosionShape()] as never,
-      scalar: 1,
-    })
+    flashScreen(GRADE_COLORS[1])
+    burstExplosion(0, 40, 360, 4)
+    burstExplosion(120, 30, 360, 3.5)
+    burstExplosion(260, 20, 260, 3)
     return
   }
   if (grade === 2) {
+    flashScreen('#8FA3C4')
     confetti({
-      particleCount: 16,
-      startVelocity: 8,
-      gravity: 0.5,
-      spread: 50,
-      ticks: 150,
+      particleCount: 30,
+      startVelocity: 12,
+      gravity: 0.4,
+      spread: 70,
+      ticks: 260,
       origin: { y: -0.05, x: 0.5 },
-      shapes: [getSadShape()] as never,
-      scalar: 1,
+      shapes: [getShape('😢', 3.5), getShape('💧', 2.5)] as never,
+      scalar: 3,
     })
     return
   }
   confetti({
-    particleCount: grade >= 4 ? 60 : 24,
-    spread: 65,
+    particleCount: grade >= 4 ? 90 : 40,
+    spread: 70,
+    startVelocity: grade >= 4 ? 45 : 35,
     origin: { y: 0.6 },
     colors: [GRADE_COLORS[1], GRADE_COLORS[2], GRADE_COLORS[3], GRADE_COLORS[4], GRADE_COLORS[5]],
   })
+  if (grade === 5) {
+    window.setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        spread: 100,
+        startVelocity: 40,
+        origin: { y: 0.6 },
+        colors: [GRADE_COLORS[4], GRADE_COLORS[5], '#FFD93D'],
+      })
+    }, 150)
+  }
 }
