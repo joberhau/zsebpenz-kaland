@@ -61,15 +61,16 @@ function chiptuneTone(ctx: AudioContext, freq: number, startTime: number, durati
   osc.stop(startTime + duration)
 }
 
-/** Classic retro "game over" jingle: tü-tü-tü-tüüü, descending to a low held note. Crushing, not triumphant. */
+/** Retro arcade "you fell / lost a life" tumble: a fast descending run ending in a low thud. */
 export function playGameOverJingle(): void {
   try {
     const ctx = getContext()
     const now = ctx.currentTime
-    chiptuneTone(ctx, 415.3, now, 0.13) // tü (G#4)
-    chiptuneTone(ctx, 415.3, now + 0.17, 0.13) // tü
-    chiptuneTone(ctx, 415.3, now + 0.34, 0.13) // tü
-    chiptuneTone(ctx, 220.0, now + 0.51, 0.75, 0.22) // tüüü (A3, low, held)
+    const tumble = [523.25, 493.88, 440.0, 392.0, 349.23, 311.13, 261.63, 233.08]
+    tumble.forEach((freq, i) => {
+      chiptuneTone(ctx, freq, now + i * 0.065, 0.08, 0.17)
+    })
+    chiptuneTone(ctx, 98, now + tumble.length * 0.065, 0.3, 0.24) // thud
   } catch {
     // Web Audio unavailable — fail silently, sound is a nice-to-have.
   }
