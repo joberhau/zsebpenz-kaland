@@ -71,11 +71,11 @@ export function celebrateGrade(grade: Grade): void {
     flashScreen('#8FA3C4')
     confetti({
       particleCount: 30,
-      startVelocity: 12,
-      gravity: 0.4,
+      startVelocity: 25,
+      gravity: 0.7,
       spread: 70,
-      ticks: 260,
-      origin: { y: -0.05, x: 0.5 },
+      ticks: 200,
+      origin: { y: 0.6, x: 0.5 },
       shapes: [getShape('😢', 3.5), getShape('💧', 2.5)] as never,
       scalar: 3,
     })
