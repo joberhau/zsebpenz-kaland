@@ -1,12 +1,15 @@
+import { useEffect, useState } from 'react'
 import type { AppData } from '../types'
 import {
   STUDENT_COLORS,
   currentMonthKey,
   formatHuf,
   formatHufCompact,
+  formatMonthLabel,
   formatMonthShort,
   gradeBasedTotal,
   monthsOfYear,
+  shiftMonth,
   studentMonthTotal,
   todaysActivities,
 } from '../utils'
@@ -18,10 +21,22 @@ interface OverviewProps {
   onLogout: () => void
 }
 
+const HEADLINE_KEY = 'zsebpenz-kaland-headline-offset'
+
+function loadHeadlineOffset(): number {
+  const raw = localStorage.getItem(HEADLINE_KEY)
+  return raw === '-1' ? -1 : 0
+}
+
 export default function Overview({ data, onSelectStudent, onLogout }: OverviewProps) {
-  const month = currentMonthKey()
+  const [headlineOffset, setHeadlineOffset] = useState(loadHeadlineOffset)
   const currentYear = new Date().getFullYear()
   const yearMonths = monthsOfYear(currentYear)
+  const headlineMonth = shiftMonth(currentMonthKey(), headlineOffset)
+
+  useEffect(() => {
+    localStorage.setItem(HEADLINE_KEY, String(headlineOffset))
+  }, [headlineOffset])
 
   return (
     <div>
@@ -39,8 +54,30 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
       </header>
 
       <main className="max-w-5xl mx-auto px-5 py-6">
-        <h2 className="font-display text-xl font-bold text-slate-800">Szia! 👋</h2>
-        <p className="text-slate-500 mb-5">A tanulóid havi állása és éves idővonala</p>
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+          <div>
+            <h2 className="font-display text-xl font-bold text-slate-800">Szia! 👋</h2>
+            <p className="text-slate-500">A tanulóid havi állása és éves idővonala</p>
+          </div>
+          <div className="flex bg-white border-2 border-slate-200 rounded-xl p-1">
+            <button
+              onClick={() => setHeadlineOffset(-1)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                headlineOffset === -1 ? 'bg-grape text-white' : 'text-slate-500'
+              }`}
+            >
+              Előző hónap
+            </button>
+            <button
+              onClick={() => setHeadlineOffset(0)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                headlineOffset === 0 ? 'bg-grape text-white' : 'text-slate-500'
+              }`}
+            >
+              Aktuális hónap
+            </button>
+          </div>
+        </div>
 
         {data.students.length === 0 ? (
           <div className="bg-white rounded-3xl border-4 border-dashed border-slate-200 p-10 text-center">
@@ -53,12 +90,12 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
             {data.students.map((student) => {
               const c = STUDENT_COLORS[student.color]
               const baseAllowance = student.baseAllowance ?? 0
-              const grades = gradeBasedTotal(data.assignments, data.monthlyGrades, student.id, month)
+              const grades = gradeBasedTotal(data.assignments, data.monthlyGrades, student.id, headlineMonth)
               const total = studentMonthTotal(
                 data.assignments,
                 data.monthlyGrades,
                 student.id,
-                month,
+                headlineMonth,
                 baseAllowance,
               )
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
@@ -73,16 +110,16 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
                   <div className="relative shrink-0 w-[4.75rem] pl-3 py-1">
                     <div className="absolute left-1 top-1 bottom-1 w-0.5 bg-slate-200" />
                     {yearMonths.map((m) => {
-                      const isCurrent = m === month
+                      const isHeadline = m === headlineMonth
                       const amount = studentMonthTotal(data.assignments, data.monthlyGrades, student.id, m, baseAllowance)
                       return (
                         <div key={m} className="relative flex flex-col leading-tight py-[3px]">
                           <span
                             className={`absolute -left-3 top-0.5 w-2 h-2 rounded-full border ${
-                              isCurrent ? `${c.solid} border-transparent` : 'bg-white border-slate-300'
+                              isHeadline ? `${c.solid} border-transparent` : 'bg-white border-slate-300'
                             }`}
                           />
-                          <span className={`text-[9px] font-bold uppercase ${isCurrent ? c.text : 'text-slate-400'}`}>
+                          <span className={`text-[9px] font-bold uppercase ${isHeadline ? c.text : 'text-slate-400'}`}>
                             {formatMonthShort(m)}
                           </span>
                           <span className={`text-[9px] font-semibold ${amount > 0 ? 'text-slate-600' : 'text-slate-300'}`}>
@@ -127,13 +164,17 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
                           <span>{formatHuf(grades)}</span>
                         </div>
                         <div className="flex items-center justify-between pt-1 border-t border-black/10">
-                          <span className="text-sm font-semibold text-slate-600">E hónap</span>
+                          <span className="text-sm font-semibold text-slate-600 capitalize">
+                            {formatMonthLabel(headlineMonth)}
+                          </span>
                           <span className={`font-display text-xl font-extrabold ${c.text}`}>{formatHuf(total)}</span>
                         </div>
                       </div>
                     ) : (
                       <div className={`rounded-2xl ${c.bg} px-4 py-3 flex items-center justify-between`}>
-                        <span className="text-sm font-semibold text-slate-500">E hónap</span>
+                        <span className="text-sm font-semibold text-slate-500 capitalize">
+                          {formatMonthLabel(headlineMonth)}
+                        </span>
                         <span className={`font-display text-xl font-extrabold ${c.text}`}>{formatHuf(total)}</span>
                       </div>
                     )}
