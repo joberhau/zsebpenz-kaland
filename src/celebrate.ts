@@ -57,7 +57,45 @@ function burstExplosion(delay: number, particleCount: number, spread: number, sc
   }, delay)
 }
 
-/** Bomb explosion for a fail (1), sad rain for a near-fail (2), confetti scaled by grade for 3-5. */
+function randomInRange(min: number, max: number): number {
+  return Math.random() * (max - min) + min
+}
+
+const FIREWORK_COLORS = ['#FFD93D', '#FF5DA2', '#3DDC97', '#3DB2FF', '#7C4DFF', '#FF9F45']
+
+/** Classic randomized-burst fireworks display, fired across the sky for ~1.8s. */
+function fireworks(): void {
+  const duration = 1800
+  const end = Date.now() + duration
+  const interval = window.setInterval(() => {
+    const timeLeft = end - Date.now()
+    if (timeLeft <= 0) {
+      window.clearInterval(interval)
+      return
+    }
+    const particleCount = Math.round(45 * (timeLeft / duration))
+    confetti({
+      particleCount,
+      startVelocity: 30,
+      spread: 360,
+      ticks: 70,
+      gravity: 0.7,
+      origin: { x: randomInRange(0.1, 0.35), y: randomInRange(0.1, 0.5) },
+      colors: FIREWORK_COLORS,
+    })
+    confetti({
+      particleCount,
+      startVelocity: 30,
+      spread: 360,
+      ticks: 70,
+      gravity: 0.7,
+      origin: { x: randomInRange(0.65, 0.9), y: randomInRange(0.1, 0.5) },
+      colors: FIREWORK_COLORS,
+    })
+  }, 220)
+}
+
+/** Bomb explosion for a fail (1), sad rain for a near-fail (2), confetti for 3-4, fireworks for a 5. */
 export function celebrateGrade(grade: Grade): void {
   if (grade === 1) {
     shakeScreen()
@@ -89,14 +127,6 @@ export function celebrateGrade(grade: Grade): void {
     colors: [GRADE_COLORS[1], GRADE_COLORS[2], GRADE_COLORS[3], GRADE_COLORS[4], GRADE_COLORS[5]],
   })
   if (grade === 5) {
-    window.setTimeout(() => {
-      confetti({
-        particleCount: 50,
-        spread: 100,
-        startVelocity: 40,
-        origin: { y: 0.6 },
-        colors: [GRADE_COLORS[4], GRADE_COLORS[5], '#FFD93D'],
-      })
-    }, 150)
+    window.setTimeout(fireworks, 300)
   }
 }
