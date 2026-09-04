@@ -34,7 +34,7 @@ export default function ActivitiesSchedule({ studentId, activities, onChange }: 
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">
-        <h3 className="font-display text-lg font-bold text-slate-800 mb-1">Új edzés / foglalkozás 🏃</h3>
+        <h3 className="font-display text-lg font-bold text-slate-800 mb-1">Új esemény 📅</h3>
         <p className="text-sm text-slate-400 mb-4">Heti rendszerességgel ismétlődik ugyanazon a napon.</p>
 
         <form onSubmit={addActivity} className="space-y-3">

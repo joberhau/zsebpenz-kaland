@@ -36,7 +36,7 @@ export interface MonthlyGrade {
   grade: Grade
 }
 
-/** A weekly-recurring training/activity slot for a student (e.g. foci, Monday 16:00-17:00). */
+/** A weekly-recurring event slot for a student (training, foci, tánc, etc.). */
 export interface Activity {
   id: string
   studentId: string
@@ -47,10 +47,20 @@ export interface Activity {
   endTime: string // "HH:MM"
 }
 
+/** A weekly-recurring school class period, built from the student's already-assigned subjects. */
+export interface TimetableEntry {
+  id: string
+  studentId: string
+  subjectId: string
+  dayOfWeek: number // 1=Monday .. 5=Friday
+  startTime: string // "HH:MM"
+}
+
 export interface AppData {
   subjects: Subject[]
   students: Student[]
   assignments: Assignment[]
   monthlyGrades: MonthlyGrade[]
   activities: Activity[]
+  timetable: TimetableEntry[]
 }

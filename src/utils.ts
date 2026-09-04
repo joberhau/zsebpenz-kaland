@@ -112,6 +112,8 @@ export const DAY_NAMES = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtö
 export const DAY_NAMES_SHORT = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo']
 /** Display order for a Monday-first weekly view (values are Date.getDay() indices). */
 export const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
+/** School week: Monday through Friday only. */
+export const SCHOOL_DAY_ORDER = [1, 2, 3, 4, 5]
 
 export function todayDayOfWeek(): number {
   return new Date().getDay()

@@ -5,6 +5,7 @@ import { Avatar } from './Avatars'
 import AssignmentsEditor from './AssignmentsEditor'
 import MonthlyGrades from './MonthlyGrades'
 import ActivitiesSchedule from './ActivitiesSchedule'
+import Timetable from './Timetable'
 import PrintableSubjectTable from './PrintableSubjectTable'
 
 interface StudentDetailProps {
@@ -15,7 +16,7 @@ interface StudentDetailProps {
   onDeleteStudent: () => void
 }
 
-type Tab = 'grades' | 'subjects' | 'activities'
+type Tab = 'grades' | 'subjects' | 'activities' | 'timetable'
 
 export default function StudentDetail({ studentId, data, onBack, onUpdateData, onDeleteStudent }: StudentDetailProps) {
   const [tab, setTab] = useState<Tab>('grades')
@@ -102,7 +103,15 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
               tab === 'activities' ? `${colors.solid} text-white` : 'text-slate-500'
             }`}
           >
-            Edzések 🏃
+            Események 📅
+          </button>
+          <button
+            onClick={() => setTab('timetable')}
+            className={`px-5 py-2.5 rounded-xl font-display font-bold transition-colors ${
+              tab === 'timetable' ? `${colors.solid} text-white` : 'text-slate-500'
+            }`}
+          >
+            Órarend 📐
           </button>
         </div>
 
@@ -130,6 +139,15 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
             studentId={studentId}
             activities={data.activities}
             onChange={(activities) => onUpdateData({ activities })}
+          />
+        )}
+        {tab === 'timetable' && (
+          <Timetable
+            studentId={studentId}
+            subjects={data.subjects}
+            assignments={data.assignments}
+            timetable={data.timetable}
+            onChange={(timetable) => onUpdateData({ timetable })}
           />
         )}
       </main>

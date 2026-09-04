@@ -26,11 +26,11 @@ function seedData(): AppData {
     { id: uid(), studentId: anna.id, subjectId: angol.id, values: { 1: 0, 2: 0, 3: 0, 4: 250, 5: 500 } },
   ]
 
-  return { subjects, students: [anna], assignments, monthlyGrades: [], activities: [] }
+  return { subjects, students: [anna], assignments, monthlyGrades: [], activities: [], timetable: [] }
 }
 
 function emptyData(): AppData {
-  return { subjects: [], students: [], assignments: [], monthlyGrades: [], activities: [] }
+  return { subjects: [], students: [], assignments: [], monthlyGrades: [], activities: [], timetable: [] }
 }
 
 let seedAttempted = false
@@ -46,6 +46,7 @@ export function subscribeData(callback: (data: AppData) => void): () => void {
         assignments: raw.assignments ?? [],
         monthlyGrades: raw.monthlyGrades ?? [],
         activities: raw.activities ?? [],
+        timetable: raw.timetable ?? [],
       })
     } else {
       callback(emptyData())
