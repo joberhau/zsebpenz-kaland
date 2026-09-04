@@ -1,55 +1,24 @@
 import { useState } from 'react'
-import { clearPassword, hasPassword, setPassword, verifyPassword } from '../auth'
+import { friendlyAuthError, signIn } from '../auth'
 
-interface LoginProps {
-  onEnter: () => void
-}
-
-export default function Login({ onEnter }: LoginProps) {
-  const [mode, setMode] = useState<'login' | 'setup'>(() => (hasPassword() ? 'login' : 'setup'))
-  const [password, setPasswordInput] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+export default function Login() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  async function handleSetup(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    if (password.length < 4) {
-      setError('Legalább 4 karakter legyen a jelszó.')
-      return
-    }
-    if (password !== confirmPassword) {
-      setError('A két jelszó nem egyezik.')
-      return
-    }
-    setBusy(true)
-    await setPassword(password)
-    setBusy(false)
-    onEnter()
-  }
-
-  async function handleLogin(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setBusy(true)
-    const ok = await verifyPassword(password)
-    setBusy(false)
-    if (ok) {
-      onEnter()
-    } else {
-      setError('Hibás jelszó, próbáld újra.')
-      setPasswordInput('')
-    }
-  }
-
-  function handleForgot() {
-    if (confirm('Ez törli a jelenlegi szülői jelszót, és újat kell beállítanod. Folytatod?')) {
-      clearPassword()
-      setMode('setup')
-      setPassword('')
-      setConfirmPassword('')
-      setError('')
+    try {
+      await signIn(email, password)
+      // onAuthStateChanged in App.tsx picks up the signed-in user automatically.
+    } catch (err) {
+      const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
+      setError(friendlyAuthError(code))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -67,71 +36,40 @@ export default function Login({ onEnter }: LoginProps) {
           <p className="text-slate-500 mt-1">Jó jegy = jó zsebpénz!</p>
         </div>
 
-        {mode === 'setup' ? (
-          <form className="space-y-3" onSubmit={handleSetup}>
-            <p className="text-sm text-slate-500 bg-slate-50 rounded-2xl px-4 py-3">
-              Első belépés — állíts be egy szülői jelszót, amivel legközelebb bejelentkezel.
-            </p>
-            <div>
-              <label className="text-sm font-semibold text-slate-600 ml-1">Új jelszó</label>
-              <input
-                autoFocus
-                type="password"
-                value={password}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="••••••••"
-                className="w-full mt-1 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-grape focus:outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-slate-600 ml-1">Jelszó megerősítése</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full mt-1 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-grape focus:outline-none transition-colors"
-              />
-            </div>
-            {error && <p className="text-bubblegum text-sm font-semibold ml-1">{error}</p>}
-            <button
-              type="submit"
-              disabled={busy}
-              className="btn-pop w-full mt-2 bg-mint text-white font-display font-bold text-lg py-3 rounded-2xl shadow-pop hover:brightness-105 disabled:opacity-60"
-            >
-              Jelszó beállítása 🚀
-            </button>
-          </form>
-        ) : (
-          <form className="space-y-3" onSubmit={handleLogin}>
-            <div>
-              <label className="text-sm font-semibold text-slate-600 ml-1">Szülői jelszó</label>
-              <input
-                autoFocus
-                type="password"
-                value={password}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="••••••••"
-                className="w-full mt-1 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-grape focus:outline-none transition-colors"
-              />
-            </div>
-            {error && <p className="text-bubblegum text-sm font-semibold ml-1">{error}</p>}
-            <button
-              type="submit"
-              disabled={busy}
-              className="btn-pop w-full mt-2 bg-mint text-white font-display font-bold text-lg py-3 rounded-2xl shadow-pop hover:brightness-105 disabled:opacity-60"
-            >
-              Belépés 🚀
-            </button>
-            <button
-              type="button"
-              onClick={handleForgot}
-              className="w-full text-center text-xs text-slate-400 hover:text-bubblegum font-semibold pt-1"
-            >
-              Elfelejtettem a jelszót
-            </button>
-          </form>
-        )}
+        <form className="space-y-3" onSubmit={handleSubmit}>
+          <div>
+            <label className="text-sm font-semibold text-slate-600 ml-1">E-mail cím</label>
+            <input
+              autoFocus
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="szulo@pelda.hu"
+              className="w-full mt-1 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-grape focus:outline-none transition-colors"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-600 ml-1">Jelszó</label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full mt-1 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-grape focus:outline-none transition-colors"
+            />
+          </div>
+          {error && <p className="text-bubblegum text-sm font-semibold ml-1">{error}</p>}
+          <button
+            type="submit"
+            disabled={busy}
+            className="btn-pop w-full mt-2 bg-mint text-white font-display font-bold text-lg py-3 rounded-2xl shadow-pop hover:brightness-105 disabled:opacity-60"
+          >
+            Belépés 🚀
+          </button>
+        </form>
       </div>
     </div>
   )

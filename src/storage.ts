@@ -1,6 +1,8 @@
+import { doc, onSnapshot, setDoc } from 'firebase/firestore'
+import { db } from './firebase'
 import type { AppData, Assignment, Student, Subject } from './types'
 
-const STORAGE_KEY = 'zsebpenz-kaland-data-v2'
+const DOC_REF = doc(db, 'app', 'data')
 
 function uid(): string {
   return Math.random().toString(36).slice(2, 10)
@@ -27,22 +29,31 @@ function seedData(): AppData {
   return { subjects, students: [anna], assignments, monthlyGrades: [] }
 }
 
-export function loadData(): AppData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      const seeded = seedData()
-      saveData(seeded)
-      return seeded
-    }
-    return JSON.parse(raw) as AppData
-  } catch {
-    return seedData()
-  }
+function emptyData(): AppData {
+  return { subjects: [], students: [], assignments: [], monthlyGrades: [] }
 }
 
-export function saveData(data: AppData): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+let seedAttempted = false
+
+/** Live-subscribes to the shared app data document; seeds example data on first ever run. */
+export function subscribeData(callback: (data: AppData) => void): () => void {
+  return onSnapshot(DOC_REF, (snap) => {
+    if (snap.exists()) {
+      callback(snap.data() as AppData)
+    } else {
+      callback(emptyData())
+      if (!seedAttempted) {
+        seedAttempted = true
+        setDoc(DOC_REF, seedData()).catch(() => {
+          seedAttempted = false
+        })
+      }
+    }
+  })
+}
+
+export async function saveData(data: AppData): Promise<void> {
+  await setDoc(DOC_REF, data)
 }
 
 export { uid }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import type { User } from 'firebase/auth'
 import type { AppData, AvatarId, Student, StudentColor } from './types'
-import { loadData, saveData, uid } from './storage'
+import { logOut, subscribeAuth } from './auth'
+import { saveData, subscribeData, uid } from './storage'
 import Login from './components/Login'
 import Overview from './components/Overview'
 import StudentsManager from './components/StudentsManager'
@@ -8,77 +10,100 @@ import SubjectsManager from './components/SubjectsManager'
 import StudentDetail from './components/StudentDetail'
 import BottomNav from './components/BottomNav'
 
-type View = 'login' | 'app'
 type Tab = 'overview' | 'students' | 'subjects'
 
+const EMPTY_DATA: AppData = { subjects: [], students: [], assignments: [], monthlyGrades: [] }
+
 export default function App() {
-  const [view, setView] = useState<View>('login')
+  const [authLoading, setAuthLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null)
+  const [dataLoading, setDataLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('overview')
-  const [data, setData] = useState<AppData>(() => loadData())
+  const [data, setData] = useState<AppData>(EMPTY_DATA)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
 
   useEffect(() => {
-    saveData(data)
-  }, [data])
+    return subscribeAuth((u) => {
+      setUser(u)
+      setAuthLoading(false)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!user) {
+      setData(EMPTY_DATA)
+      setDataLoading(true)
+      return
+    }
+    setDataLoading(true)
+    return subscribeData((d) => {
+      setData(d)
+      setDataLoading(false)
+    })
+  }, [user])
 
   function updateData(patch: Partial<AppData>) {
-    setData((prev) => ({ ...prev, ...patch }))
+    setData((prev) => {
+      const next = { ...prev, ...patch }
+      saveData(next)
+      return next
+    })
   }
 
   function addStudent(name: string, avatar: AvatarId, color: StudentColor) {
     const student: Student = { id: uid(), name, avatar, color }
-    setData((prev) => ({ ...prev, students: [...prev.students, student] }))
+    updateData({ students: [...data.students, student] })
   }
 
   function updateStudent(id: string, name: string, avatar: AvatarId, color: StudentColor) {
-    setData((prev) => ({
-      ...prev,
-      students: prev.students.map((s) => (s.id === id ? { ...s, name, avatar, color } : s)),
-    }))
+    updateData({
+      students: data.students.map((s) => (s.id === id ? { ...s, name, avatar, color } : s)),
+    })
   }
 
   function deleteStudent(id: string) {
-    setData((prev) => {
-      const removedAssignmentIds = new Set(
-        prev.assignments.filter((a) => a.studentId === id).map((a) => a.id),
-      )
-      return {
-        ...prev,
-        students: prev.students.filter((s) => s.id !== id),
-        assignments: prev.assignments.filter((a) => a.studentId !== id),
-        monthlyGrades: prev.monthlyGrades.filter((g) => !removedAssignmentIds.has(g.assignmentId)),
-      }
+    const removedAssignmentIds = new Set(
+      data.assignments.filter((a) => a.studentId === id).map((a) => a.id),
+    )
+    updateData({
+      students: data.students.filter((s) => s.id !== id),
+      assignments: data.assignments.filter((a) => a.studentId !== id),
+      monthlyGrades: data.monthlyGrades.filter((g) => !removedAssignmentIds.has(g.assignmentId)),
     })
     setSelectedStudentId(null)
   }
 
   function addSubject(name: string) {
-    setData((prev) => ({ ...prev, subjects: [...prev.subjects, { id: uid(), name }] }))
+    updateData({ subjects: [...data.subjects, { id: uid(), name }] })
   }
 
   function renameSubject(id: string, name: string) {
-    setData((prev) => ({
-      ...prev,
-      subjects: prev.subjects.map((s) => (s.id === id ? { ...s, name } : s)),
-    }))
-  }
-
-  function deleteSubject(id: string) {
-    setData((prev) => {
-      const removedAssignmentIds = new Set(
-        prev.assignments.filter((a) => a.subjectId === id).map((a) => a.id),
-      )
-      return {
-        ...prev,
-        subjects: prev.subjects.filter((s) => s.id !== id),
-        assignments: prev.assignments.filter((a) => a.subjectId !== id),
-        monthlyGrades: prev.monthlyGrades.filter((g) => !removedAssignmentIds.has(g.assignmentId)),
-      }
+    updateData({
+      subjects: data.subjects.map((s) => (s.id === id ? { ...s, name } : s)),
     })
   }
 
-  if (view === 'login') {
-    return <Login onEnter={() => setView('app')} />
+  function deleteSubject(id: string) {
+    const removedAssignmentIds = new Set(
+      data.assignments.filter((a) => a.subjectId === id).map((a) => a.id),
+    )
+    updateData({
+      subjects: data.subjects.filter((s) => s.id !== id),
+      assignments: data.assignments.filter((a) => a.subjectId !== id),
+      monthlyGrades: data.monthlyGrades.filter((g) => !removedAssignmentIds.has(g.assignmentId)),
+    })
+  }
+
+  if (authLoading || (user && dataLoading)) {
+    return (
+      <div className="min-h-screen bg-[#FFF7EE] flex items-center justify-center">
+        <div className="text-5xl animate-wiggle">🦄💰</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Login />
   }
 
   if (selectedStudentId) {
@@ -98,7 +123,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FFF7EE] pb-20">
       {tab === 'overview' && (
-        <Overview data={data} onSelectStudent={setSelectedStudentId} onLogout={() => setView('login')} />
+        <Overview data={data} onSelectStudent={setSelectedStudentId} onLogout={() => logOut()} />
       )}
       {tab === 'students' && (
         <StudentsManager
