@@ -5,6 +5,7 @@ import { Avatar } from './Avatars'
 import AssignmentsEditor from './AssignmentsEditor'
 import MonthlyGrades from './MonthlyGrades'
 import ActivitiesSchedule from './ActivitiesSchedule'
+import PrintableSubjectTable from './PrintableSubjectTable'
 
 interface StudentDetailProps {
   studentId: string
@@ -26,6 +27,7 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
 
   return (
     <div>
+      <div className="print:hidden">
       <header className={`px-5 py-4 sticky top-0 z-10 bg-white border-b-4 ${colors.border}`}>
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -41,14 +43,23 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
             </div>
             <h1 className="font-display text-lg font-extrabold text-slate-800 truncate">{student.name}</h1>
           </div>
-          <button
-            onClick={() => {
-              if (confirm(`Biztosan törlöd ${student.name} adatait?`)) onDeleteStudent()
-            }}
-            className="text-sm font-semibold text-slate-400 hover:text-bubblegum shrink-0"
-          >
-            Törlés
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => window.print()}
+              className="text-sm font-semibold text-slate-400 hover:text-grape"
+              title="Jegyértékek nyomtatása"
+            >
+              🖨️ Nyomtatás
+            </button>
+            <button
+              onClick={() => {
+                if (confirm(`Biztosan törlöd ${student.name} adatait?`)) onDeleteStudent()
+              }}
+              className="text-sm font-semibold text-slate-400 hover:text-bubblegum"
+            >
+              Törlés
+            </button>
+          </div>
         </div>
       </header>
 
@@ -111,6 +122,9 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
           />
         )}
       </main>
+      </div>
+
+      <PrintableSubjectTable student={student} subjects={data.subjects} assignments={data.assignments} />
     </div>
   )
 }

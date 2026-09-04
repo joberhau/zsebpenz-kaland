@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import confetti from 'canvas-confetti'
 import type { Assignment, Grade, MonthlyGrade, StudentColor, Subject } from '../types'
 import { uid } from '../storage'
+import { playGradeSound } from '../sound'
 import {
   GRADE_COLORS,
   STUDENT_COLORS,
@@ -57,6 +58,7 @@ export default function MonthlyGrades({
       origin: { y: 0.6 },
       colors: [GRADE_COLORS[1], GRADE_COLORS[2], GRADE_COLORS[3], GRADE_COLORS[4], GRADE_COLORS[5]],
     })
+    playGradeSound(grade)
   }
 
   function clearGrade(assignmentId: string) {
