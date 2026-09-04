@@ -1,12 +1,12 @@
-import { useState } from 'react'
 import type { AppData } from '../types'
 import {
   STUDENT_COLORS,
   currentMonthKey,
   formatHuf,
-  formatMonthLabel,
+  formatHufCompact,
+  formatMonthShort,
   gradeBasedTotal,
-  shiftMonth,
+  monthsOfYear,
   studentMonthTotal,
   todaysActivities,
 } from '../utils'
@@ -19,7 +19,9 @@ interface OverviewProps {
 }
 
 export default function Overview({ data, onSelectStudent, onLogout }: OverviewProps) {
-  const [month, setMonth] = useState(currentMonthKey())
+  const month = currentMonthKey()
+  const currentYear = new Date().getFullYear()
+  const yearMonths = monthsOfYear(currentYear)
 
   return (
     <div>
@@ -37,31 +39,8 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
       </header>
 
       <main className="max-w-5xl mx-auto px-5 py-6">
-        <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
-          <div>
-            <h2 className="font-display text-xl font-bold text-slate-800">Szia! 👋</h2>
-            <p className="text-slate-500">A tanulóid havi állása</p>
-          </div>
-          <div className="flex items-center gap-1 bg-white border-2 border-slate-200 rounded-xl px-1 py-1">
-            <button
-              onClick={() => setMonth((m) => shiftMonth(m, -1))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 font-bold"
-              title="Előző hónap"
-            >
-              ‹
-            </button>
-            <span className="px-2 text-sm font-semibold text-slate-700 min-w-[7.5rem] text-center">
-              {formatMonthLabel(month)}
-            </span>
-            <button
-              onClick={() => setMonth((m) => shiftMonth(m, 1))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 font-bold"
-              title="Következő hónap"
-            >
-              ›
-            </button>
-          </div>
-        </div>
+        <h2 className="font-display text-xl font-bold text-slate-800">Szia! 👋</h2>
+        <p className="text-slate-500 mb-5">A tanulóid havi állása és éves idővonala</p>
 
         {data.students.length === 0 ? (
           <div className="bg-white rounded-3xl border-4 border-dashed border-slate-200 p-10 text-center">
@@ -88,50 +67,77 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
                 <button
                   key={student.id}
                   onClick={() => onSelectStudent(student.id)}
-                  className={`text-left bg-white rounded-3xl border-4 ${c.border} p-5 shadow-pop btn-pop`}
+                  className={`text-left bg-white rounded-3xl border-4 ${c.border} p-4 shadow-pop btn-pop flex gap-3`}
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-16 h-16 rounded-2xl ${c.bg} flex items-center justify-center overflow-hidden`}>
-                      <Avatar id={student.avatar} size={56} />
-                    </div>
-                    <div>
-                      <div className="font-display text-lg font-bold text-slate-800">{student.name}</div>
-                      <div className="text-xs text-slate-400 font-semibold">{subjectCount} tantárgy</div>
-                    </div>
+                  {/* Left-edge yearly timeline */}
+                  <div className="relative shrink-0 w-[4.75rem] pl-3 py-1">
+                    <div className="absolute left-1 top-1 bottom-1 w-0.5 bg-slate-200" />
+                    {yearMonths.map((m) => {
+                      const isCurrent = m === month
+                      const amount = studentMonthTotal(data.assignments, data.monthlyGrades, student.id, m, baseAllowance)
+                      return (
+                        <div key={m} className="relative flex flex-col leading-tight py-[3px]">
+                          <span
+                            className={`absolute -left-3 top-0.5 w-2 h-2 rounded-full border ${
+                              isCurrent ? `${c.solid} border-transparent` : 'bg-white border-slate-300'
+                            }`}
+                          />
+                          <span className={`text-[9px] font-bold uppercase ${isCurrent ? c.text : 'text-slate-400'}`}>
+                            {formatMonthShort(m)}
+                          </span>
+                          <span className={`text-[9px] font-semibold ${amount > 0 ? 'text-slate-600' : 'text-slate-300'}`}>
+                            {amount > 0 ? formatHufCompact(amount) : '—'}
+                          </span>
+                        </div>
+                      )
+                    })}
                   </div>
-                  {todayActivities.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {todayActivities.map((a) => (
-                        <span
-                          key={a.id}
-                          className="inline-flex items-center gap-1 bg-lemon/30 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full"
-                        >
-                          {a.icon} {a.name} · {a.startTime}
-                        </span>
-                      ))}
+
+                  {/* Right: usual card content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-14 h-14 rounded-2xl ${c.bg} flex items-center justify-center overflow-hidden shrink-0`}>
+                        <Avatar id={student.avatar} size={48} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-display text-lg font-bold text-slate-800 truncate">{student.name}</div>
+                        <div className="text-xs text-slate-400 font-semibold">{subjectCount} tantárgy</div>
+                      </div>
                     </div>
-                  )}
-                  {baseAllowance > 0 ? (
-                    <div className={`rounded-2xl ${c.bg} px-4 py-3 space-y-1`}>
-                      <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
-                        <span>Fix</span>
-                        <span>{formatHuf(baseAllowance)}</span>
+                    {todayActivities.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {todayActivities.map((a) => (
+                          <span
+                            key={a.id}
+                            className="inline-flex items-center gap-1 bg-lemon/30 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full"
+                          >
+                            {a.icon} {a.name} · {a.startTime}
+                          </span>
+                        ))}
                       </div>
-                      <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
-                        <span>Eredményekből</span>
-                        <span>{formatHuf(grades)}</span>
+                    )}
+                    {baseAllowance > 0 ? (
+                      <div className={`rounded-2xl ${c.bg} px-4 py-3 space-y-1`}>
+                        <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
+                          <span>Fix</span>
+                          <span>{formatHuf(baseAllowance)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
+                          <span>Eredményekből</span>
+                          <span>{formatHuf(grades)}</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-black/10">
+                          <span className="text-sm font-semibold text-slate-600">E hónap</span>
+                          <span className={`font-display text-xl font-extrabold ${c.text}`}>{formatHuf(total)}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between pt-1 border-t border-black/10">
-                        <span className="text-sm font-semibold text-slate-600">Összesen</span>
+                    ) : (
+                      <div className={`rounded-2xl ${c.bg} px-4 py-3 flex items-center justify-between`}>
+                        <span className="text-sm font-semibold text-slate-500">E hónap</span>
                         <span className={`font-display text-xl font-extrabold ${c.text}`}>{formatHuf(total)}</span>
                       </div>
-                    </div>
-                  ) : (
-                    <div className={`rounded-2xl ${c.bg} px-4 py-3 flex items-center justify-between`}>
-                      <span className="text-sm font-semibold text-slate-500">Havi zsebpénz</span>
-                      <span className={`font-display text-xl font-extrabold ${c.text}`}>{formatHuf(total)}</span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </button>
               )
             })}

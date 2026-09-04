@@ -4,6 +4,11 @@ export function formatHuf(amount: number): string {
   return new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 0 }).format(amount) + ' Ft'
 }
 
+/** Compact number without the "Ft" suffix, for tight spaces like mini timelines. */
+export function formatHufCompact(amount: number): string {
+  return new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 0 }).format(amount)
+}
+
 export function currentMonthKey(): string {
   return new Date().toISOString().slice(0, 7)
 }
