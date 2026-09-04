@@ -37,6 +37,7 @@ const GRADES = [1, 2, 3, 4, 5] as const
 
 export function printSubjectTable(student: Student, subjects: Subject[], assignments: Assignment[]) {
   const rows = assignments
+    .filter((a) => a.studentId === student.id)
     .map((a) => ({ assignment: a, subject: subjects.find((s) => s.id === a.subjectId) }))
     .filter((r) => r.subject)
     .sort((a, b) => a.subject!.name.localeCompare(b.subject!.name, 'hu'))
