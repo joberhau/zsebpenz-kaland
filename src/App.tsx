@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
 import type { AppData, AvatarId, Student, StudentColor } from './types'
 import { logOut, subscribeAuth } from './auth'
@@ -31,6 +31,12 @@ export default function App() {
   const [data, setData] = useState<AppData>(EMPTY_DATA)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
 
+  // Guards against a delayed Firestore snapshot echo clobbering newer local
+  // edits: while a write is pending/in-flight, incoming snapshots are ignored.
+  const pendingRef = useRef<AppData | null>(null)
+  const savingRef = useRef(false)
+  const debounceTimerRef = useRef<number | undefined>(undefined)
+
   useEffect(() => {
     return subscribeAuth((u) => {
       setUser(u)
@@ -46,15 +52,39 @@ export default function App() {
     }
     setDataLoading(true)
     return subscribeData((d) => {
+      if (pendingRef.current || savingRef.current) {
+        // We have unsaved/unconfirmed local edits — don't let a stale snapshot overwrite them.
+        setDataLoading(false)
+        return
+      }
       setData(d)
       setDataLoading(false)
     })
   }, [user])
 
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) window.clearTimeout(debounceTimerRef.current)
+      if (pendingRef.current) saveData(pendingRef.current)
+    }
+  }, [])
+
+  function flushPendingSave() {
+    const next = pendingRef.current
+    if (!next) return
+    pendingRef.current = null
+    savingRef.current = true
+    saveData(next).finally(() => {
+      savingRef.current = false
+    })
+  }
+
   function updateData(patch: Partial<AppData>) {
     setData((prev) => {
       const next = { ...prev, ...patch }
-      saveData(next)
+      pendingRef.current = next
+      if (debounceTimerRef.current) window.clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = window.setTimeout(flushPendingSave, 500)
       return next
     })
   }
