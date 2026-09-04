@@ -1,6 +1,7 @@
 import confetti from 'canvas-confetti'
 import type { Grade } from './types'
 import { GRADE_COLORS } from './utils'
+import { playFireworkBoom } from './sound'
 
 // canvas-confetti's runtime supports shapeFromText (used to draw emoji particles),
 // but the bundled @types package doesn't declare it yet.
@@ -63,36 +64,36 @@ function randomInRange(min: number, max: number): number {
 
 const FIREWORK_COLORS = ['#FFD93D', '#FF5DA2', '#3DDC97', '#3DB2FF', '#7C4DFF', '#FF9F45']
 
-/** Classic randomized-burst fireworks display, fired across the sky for ~1.8s. */
+/** Classic randomized-burst fireworks display, fired across the sky for ~2.2s, each burst with its own boom. */
 function fireworks(): void {
-  const duration = 1800
+  const duration = 2200
   const end = Date.now() + duration
-  const interval = window.setInterval(() => {
+
+  function burst(x: number, y: number, particleCount: number) {
+    playFireworkBoom()
+    confetti({
+      particleCount,
+      startVelocity: 45,
+      spread: 360,
+      ticks: 90,
+      gravity: 0.7,
+      scalar: 1.2,
+      shapes: ['star', 'circle'],
+      colors: FIREWORK_COLORS,
+      origin: { x, y },
+    })
+  }
+
+  function tick() {
     const timeLeft = end - Date.now()
-    if (timeLeft <= 0) {
-      window.clearInterval(interval)
-      return
-    }
-    const particleCount = Math.round(45 * (timeLeft / duration))
-    confetti({
-      particleCount,
-      startVelocity: 30,
-      spread: 360,
-      ticks: 70,
-      gravity: 0.7,
-      origin: { x: randomInRange(0.1, 0.35), y: randomInRange(0.1, 0.5) },
-      colors: FIREWORK_COLORS,
-    })
-    confetti({
-      particleCount,
-      startVelocity: 30,
-      spread: 360,
-      ticks: 70,
-      gravity: 0.7,
-      origin: { x: randomInRange(0.65, 0.9), y: randomInRange(0.1, 0.5) },
-      colors: FIREWORK_COLORS,
-    })
-  }, 220)
+    if (timeLeft <= 0) return
+    const particleCount = Math.round(70 * (timeLeft / duration)) + 20
+    const side = Math.random() < 0.5
+    burst(randomInRange(side ? 0.15 : 0.6, side ? 0.4 : 0.85), randomInRange(0.15, 0.5), particleCount)
+    window.setTimeout(tick, 280 + randomInRange(-60, 60))
+  }
+
+  tick()
 }
 
 /** Bomb explosion for a fail (1), sad rain for a near-fail (2), confetti for 3-4, fireworks for a 5. */

@@ -113,6 +113,46 @@ function whoop(ctx: AudioContext, time: number, gainPeak = 0.18) {
   osc.stop(time + 0.38)
 }
 
+function boom(ctx: AudioContext, time: number, gainPeak = 0.4) {
+  // low thump
+  const osc = ctx.createOscillator()
+  const oscGain = ctx.createGain()
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(160, time)
+  osc.frequency.exponentialRampToValueAtTime(35, time + 0.32)
+  oscGain.gain.setValueAtTime(gainPeak, time)
+  oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.38)
+  osc.connect(oscGain)
+  oscGain.connect(ctx.destination)
+  osc.start(time)
+  osc.stop(time + 0.4)
+
+  // crackle
+  const noise = ctx.createBufferSource()
+  noise.buffer = getNoiseBuffer(ctx)
+  const filter = ctx.createBiquadFilter()
+  filter.type = 'highpass'
+  filter.frequency.value = 2200
+  const noiseGain = ctx.createGain()
+  noiseGain.gain.setValueAtTime(gainPeak * 0.5, time)
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.22)
+  noise.connect(filter)
+  filter.connect(noiseGain)
+  noiseGain.connect(ctx.destination)
+  noise.start(time)
+  noise.stop(time + 0.22)
+}
+
+/** A single firework "boom" — low thump + crackle. Call once per firework burst. */
+export function playFireworkBoom(): void {
+  try {
+    const ctx = getContext()
+    boom(ctx, ctx.currentTime, 0.35 + Math.random() * 0.15)
+  } catch {
+    // Web Audio unavailable — fail silently, sound is a nice-to-have.
+  }
+}
+
 /** Procedurally synthesized ovation — claps, whistles and cartoon "whoop!" cheers. No audio assets needed. */
 export function playApplause(): void {
   try {
