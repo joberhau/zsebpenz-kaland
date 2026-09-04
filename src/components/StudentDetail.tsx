@@ -4,6 +4,7 @@ import { STUDENT_COLORS, currentMonthKey, formatHuf, studentMonthTotal } from '.
 import { Avatar } from './Avatars'
 import AssignmentsEditor from './AssignmentsEditor'
 import MonthlyGrades from './MonthlyGrades'
+import ActivitiesSchedule from './ActivitiesSchedule'
 
 interface StudentDetailProps {
   studentId: string
@@ -13,7 +14,7 @@ interface StudentDetailProps {
   onDeleteStudent: () => void
 }
 
-type Tab = 'grades' | 'subjects'
+type Tab = 'grades' | 'subjects' | 'activities'
 
 export default function StudentDetail({ studentId, data, onBack, onUpdateData, onDeleteStudent }: StudentDetailProps) {
   const [tab, setTab] = useState<Tab>('grades')
@@ -74,9 +75,17 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
           >
             Tantárgyaim 📚
           </button>
+          <button
+            onClick={() => setTab('activities')}
+            className={`px-5 py-2.5 rounded-xl font-display font-bold transition-colors ${
+              tab === 'activities' ? `${colors.solid} text-white` : 'text-slate-500'
+            }`}
+          >
+            Edzések 🏃
+          </button>
         </div>
 
-        {tab === 'grades' ? (
+        {tab === 'grades' && (
           <MonthlyGrades
             studentId={studentId}
             color={student.color}
@@ -85,12 +94,20 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
             monthlyGrades={data.monthlyGrades}
             onChange={(monthlyGrades) => onUpdateData({ monthlyGrades })}
           />
-        ) : (
+        )}
+        {tab === 'subjects' && (
           <AssignmentsEditor
             studentId={studentId}
             subjects={data.subjects}
             assignments={data.assignments}
             onChange={(assignments) => onUpdateData({ assignments })}
+          />
+        )}
+        {tab === 'activities' && (
+          <ActivitiesSchedule
+            studentId={studentId}
+            activities={data.activities}
+            onChange={(activities) => onUpdateData({ activities })}
           />
         )}
       </main>

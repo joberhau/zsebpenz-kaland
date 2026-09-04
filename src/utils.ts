@@ -1,4 +1,4 @@
-import type { Assignment, MonthlyGrade, StudentColor } from './types'
+import type { Activity, Assignment, MonthlyGrade, StudentColor } from './types'
 
 export function formatHuf(amount: number): string {
   return new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 0 }).format(amount) + ' Ft'
@@ -78,3 +78,28 @@ export const GRADE_COLORS: Record<number, string> = {
 }
 
 export const STUDENT_EMOJIS = ['🦄', '🐯', '🐼', '🦊', '🐸', '🐵', '🐨', '🦁', '🐶', '🐱', '🐰', '🦋']
+
+export const DAY_NAMES = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat']
+export const DAY_NAMES_SHORT = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo']
+/** Display order for a Monday-first weekly view (values are Date.getDay() indices). */
+export const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
+
+export function todayDayOfWeek(): number {
+  return new Date().getDay()
+}
+
+export function studentActivities(activities: Activity[], studentId: string): Activity[] {
+  return activities.filter((a) => a.studentId === studentId)
+}
+
+export function todaysActivities(activities: Activity[], studentId: string): Activity[] {
+  const today = todayDayOfWeek()
+  return studentActivities(activities, studentId)
+    .filter((a) => a.dayOfWeek === today)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+}
+
+export const ACTIVITY_ICONS = [
+  '⚽', '🏀', '🎾', '🏊', '🩰', '🎨', '🎹', '🥋', '🏓', '🚴', '🏸', '♟️', '🎤', '🎭', '🧗', '🏒',
+]
+

@@ -34,9 +34,21 @@ export interface MonthlyGrade {
   grade: Grade
 }
 
+/** A weekly-recurring training/activity slot for a student (e.g. foci, Monday 16:00-17:00). */
+export interface Activity {
+  id: string
+  studentId: string
+  name: string
+  icon: string
+  dayOfWeek: number // 0=Sunday .. 6=Saturday, matching Date.getDay()
+  startTime: string // "HH:MM"
+  endTime: string // "HH:MM"
+}
+
 export interface AppData {
   subjects: Subject[]
   students: Student[]
   assignments: Assignment[]
   monthlyGrades: MonthlyGrade[]
+  activities: Activity[]
 }

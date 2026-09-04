@@ -26,11 +26,11 @@ function seedData(): AppData {
     { id: uid(), studentId: anna.id, subjectId: angol.id, values: { 1: 0, 2: 0, 3: 0, 4: 250, 5: 500 } },
   ]
 
-  return { subjects, students: [anna], assignments, monthlyGrades: [] }
+  return { subjects, students: [anna], assignments, monthlyGrades: [], activities: [] }
 }
 
 function emptyData(): AppData {
-  return { subjects: [], students: [], assignments: [], monthlyGrades: [] }
+  return { subjects: [], students: [], assignments: [], monthlyGrades: [], activities: [] }
 }
 
 let seedAttempted = false
@@ -39,7 +39,14 @@ let seedAttempted = false
 export function subscribeData(callback: (data: AppData) => void): () => void {
   return onSnapshot(DOC_REF, (snap) => {
     if (snap.exists()) {
-      callback(snap.data() as AppData)
+      const raw = snap.data() as Partial<AppData>
+      callback({
+        subjects: raw.subjects ?? [],
+        students: raw.students ?? [],
+        assignments: raw.assignments ?? [],
+        monthlyGrades: raw.monthlyGrades ?? [],
+        activities: raw.activities ?? [],
+      })
     } else {
       callback(emptyData())
       if (!seedAttempted) {

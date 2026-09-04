@@ -1,5 +1,5 @@
 import type { AppData } from '../types'
-import { STUDENT_COLORS, currentMonthKey, formatHuf, formatMonthLabel, studentMonthTotal } from '../utils'
+import { STUDENT_COLORS, currentMonthKey, formatHuf, formatMonthLabel, studentMonthTotal, todaysActivities } from '../utils'
 import { Avatar } from './Avatars'
 
 interface OverviewProps {
@@ -44,6 +44,7 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
               const c = STUDENT_COLORS[student.color]
               const total = studentMonthTotal(data.assignments, data.monthlyGrades, student.id, month)
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
+              const todayActivities = todaysActivities(data.activities, student.id)
               return (
                 <button
                   key={student.id}
@@ -59,6 +60,18 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
                       <div className="text-xs text-slate-400 font-semibold">{subjectCount} tantárgy</div>
                     </div>
                   </div>
+                  {todayActivities.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {todayActivities.map((a) => (
+                        <span
+                          key={a.id}
+                          className="inline-flex items-center gap-1 bg-lemon/30 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full"
+                        >
+                          {a.icon} {a.name} · {a.startTime}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className={`rounded-2xl ${c.bg} px-4 py-3 flex items-center justify-between`}>
                     <span className="text-sm font-semibold text-slate-500">Havi zsebpénz</span>
                     <span className={`font-display text-xl font-extrabold ${c.text}`}>{formatHuf(total)}</span>

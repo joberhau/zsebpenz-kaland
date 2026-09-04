@@ -12,7 +12,7 @@ import BottomNav from './components/BottomNav'
 
 type Tab = 'overview' | 'students' | 'subjects'
 
-const EMPTY_DATA: AppData = { subjects: [], students: [], assignments: [], monthlyGrades: [] }
+const EMPTY_DATA: AppData = { subjects: [], students: [], assignments: [], monthlyGrades: [], activities: [] }
 
 export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
@@ -69,6 +69,7 @@ export default function App() {
       students: data.students.filter((s) => s.id !== id),
       assignments: data.assignments.filter((a) => a.studentId !== id),
       monthlyGrades: data.monthlyGrades.filter((g) => !removedAssignmentIds.has(g.assignmentId)),
+      activities: data.activities.filter((a) => a.studentId !== id),
     })
     setSelectedStudentId(null)
   }
