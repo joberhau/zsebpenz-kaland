@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import confetti from 'canvas-confetti'
 import type { Assignment, Bonus, Grade, MonthlyGrade, StudentColor, Subject } from '../types'
 import { uid } from '../storage'
 import { playGradeSound } from '../sound'
+import { celebrateGrade } from '../celebrate'
 import {
   GRADE_COLORS,
   STUDENT_COLORS,
@@ -61,12 +61,7 @@ export default function MonthlyGrades({
       const entry: MonthlyGrade = { id: uid(), assignmentId, month: selectedMonth, grade }
       onChange([...monthlyGrades, entry])
     }
-    confetti({
-      particleCount: grade >= 4 ? 60 : 24,
-      spread: 65,
-      origin: { y: 0.6 },
-      colors: [GRADE_COLORS[1], GRADE_COLORS[2], GRADE_COLORS[3], GRADE_COLORS[4], GRADE_COLORS[5]],
-    })
+    celebrateGrade(grade)
     playGradeSound(grade)
   }
 
