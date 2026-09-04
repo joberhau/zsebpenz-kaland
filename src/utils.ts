@@ -1,4 +1,4 @@
-import type { Activity, Assignment, MonthlyGrade, StudentColor } from './types'
+import type { Activity, Assignment, Bonus, MonthlyGrade, StudentColor } from './types'
 
 export function formatHuf(amount: number): string {
   return new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 0 }).format(amount) + ' Ft'
@@ -59,14 +59,29 @@ export function gradeBasedTotal(
   )
 }
 
+export function studentBonuses(bonuses: Bonus[], studentId: string): Bonus[] {
+  return bonuses.filter((b) => b.studentId === studentId)
+}
+
+export function bonusMonthTotal(bonuses: Bonus[], studentId: string, month: string): number {
+  return studentBonuses(bonuses, studentId)
+    .filter((b) => b.date.slice(0, 7) === month)
+    .reduce((sum, b) => sum + b.amount, 0)
+}
+
 export function studentMonthTotal(
   assignments: Assignment[],
   monthlyGrades: MonthlyGrade[],
   studentId: string,
   month: string,
   baseAllowance = 0,
+  bonuses: Bonus[] = [],
 ): number {
-  return baseAllowance + gradeBasedTotal(assignments, monthlyGrades, studentId, month)
+  return (
+    baseAllowance +
+    gradeBasedTotal(assignments, monthlyGrades, studentId, month) +
+    bonusMonthTotal(bonuses, studentId, month)
+  )
 }
 
 export function monthsWithData(monthlyGrades: MonthlyGrade[], assignmentIds: string[]): string[] {
@@ -112,8 +127,8 @@ export const DAY_NAMES = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtö
 export const DAY_NAMES_SHORT = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo']
 /** Display order for a Monday-first weekly view (values are Date.getDay() indices). */
 export const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
-/** School week: Monday through Friday only. */
-export const SCHOOL_DAY_ORDER = [1, 2, 3, 4, 5]
+/** School week: Monday through Saturday (some schools teach Saturdays too). */
+export const SCHOOL_DAY_ORDER = [1, 2, 3, 4, 5, 6]
 
 export function todayDayOfWeek(): number {
   return new Date().getDay()

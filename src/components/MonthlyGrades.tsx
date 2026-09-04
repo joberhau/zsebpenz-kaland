@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import confetti from 'canvas-confetti'
-import type { Assignment, Grade, MonthlyGrade, StudentColor, Subject } from '../types'
+import type { Assignment, Bonus, Grade, MonthlyGrade, StudentColor, Subject } from '../types'
 import { uid } from '../storage'
 import { playGradeSound } from '../sound'
 import {
   GRADE_COLORS,
   STUDENT_COLORS,
   assignmentValue,
+  bonusMonthTotal,
   currentMonthKey,
   formatHuf,
   formatMonthLabel,
@@ -21,6 +22,7 @@ interface MonthlyGradesProps {
   studentId: string
   color: StudentColor
   baseAllowance: number
+  bonuses: Bonus[]
   subjects: Subject[]
   assignments: Assignment[]
   monthlyGrades: MonthlyGrade[]
@@ -33,6 +35,7 @@ export default function MonthlyGrades({
   studentId,
   color,
   baseAllowance,
+  bonuses,
   subjects,
   assignments,
   monthlyGrades,
@@ -43,7 +46,8 @@ export default function MonthlyGrades({
   const yearMonths = useMemo(() => monthsOfYear(currentYear), [currentYear])
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey())
   const colors = STUDENT_COLORS[color]
-  const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth, baseAllowance)
+  const bonus = bonusMonthTotal(bonuses, studentId, selectedMonth)
+  const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth, baseAllowance, bonuses)
 
   function setGrade(assignmentId: string, grade: Grade) {
     const existing = gradeForAssignment(monthlyGrades, assignmentId, selectedMonth)
@@ -160,9 +164,10 @@ export default function MonthlyGrades({
           <span className="font-semibold text-slate-600">Összesen {formatMonthLabel(selectedMonth)}</span>
           <span className={`font-display text-3xl font-extrabold ${colors.text}`}>{formatHuf(total)}</span>
         </div>
-        {baseAllowance > 0 && (
+        {(baseAllowance > 0 || bonus !== 0) && (
           <div className="text-xs text-slate-400 font-semibold mt-1">
-            Fix: {formatHuf(baseAllowance)} + Tanulási: {formatHuf(total - baseAllowance)}
+            Fix: {formatHuf(baseAllowance)} + Tanulási: {formatHuf(total - baseAllowance - bonus)}
+            {bonus !== 0 && ` ${bonus > 0 ? '+' : ''}${formatHuf(bonus)} (bónusz/levonás)`}
           </div>
         )}
       </div>
@@ -174,7 +179,7 @@ export default function MonthlyGrades({
           {yearMonths.map((m) => {
             const isSelected = m === selectedMonth
             const isCurrent = m === currentMonthKey()
-            const amount = studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance)
+            const amount = studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance, bonuses)
             return (
               <button
                 key={m}

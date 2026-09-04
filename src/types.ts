@@ -56,6 +56,26 @@ export interface TimetableEntry {
   startTime: string // "HH:MM"
 }
 
+export type AbsenceReason = 'sick' | 'medical' | 'family' | 'other'
+
+/** A logged absence/illness day for a student, for later look-back. */
+export interface Absence {
+  id: string
+  studentId: string
+  date: string // "yyyy-mm-dd"
+  reason: AbsenceReason
+  note?: string
+}
+
+/** An ad-hoc one-off bonus payout on a specific date (e.g. a contest win), parent-defined. */
+export interface Bonus {
+  id: string
+  studentId: string
+  date: string // "yyyy-mm-dd"
+  description: string
+  amount: number
+}
+
 export interface AppData {
   subjects: Subject[]
   students: Student[]
@@ -63,4 +83,6 @@ export interface AppData {
   monthlyGrades: MonthlyGrade[]
   activities: Activity[]
   timetable: TimetableEntry[]
+  absences: Absence[]
+  bonuses: Bonus[]
 }

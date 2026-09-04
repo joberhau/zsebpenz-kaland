@@ -19,6 +19,8 @@ const EMPTY_DATA: AppData = {
   monthlyGrades: [],
   activities: [],
   timetable: [],
+  absences: [],
+  bonuses: [],
 }
 
 export default function App() {
@@ -78,6 +80,8 @@ export default function App() {
       monthlyGrades: data.monthlyGrades.filter((g) => !removedAssignmentIds.has(g.assignmentId)),
       activities: data.activities.filter((a) => a.studentId !== id),
       timetable: data.timetable.filter((t) => t.studentId !== id),
+      absences: data.absences.filter((a) => a.studentId !== id),
+      bonuses: data.bonuses.filter((b) => b.studentId !== id),
     })
     setSelectedStudentId(null)
   }

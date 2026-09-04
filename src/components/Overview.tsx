@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { AppData } from '../types'
 import {
   STUDENT_COLORS,
+  bonusMonthTotal,
   currentMonthKey,
   formatHuf,
   formatHufCompact,
@@ -91,12 +92,14 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
               const c = STUDENT_COLORS[student.color]
               const baseAllowance = student.baseAllowance ?? 0
               const grades = gradeBasedTotal(data.assignments, data.monthlyGrades, student.id, headlineMonth)
+              const bonus = bonusMonthTotal(data.bonuses, student.id, headlineMonth)
               const total = studentMonthTotal(
                 data.assignments,
                 data.monthlyGrades,
                 student.id,
                 headlineMonth,
                 baseAllowance,
+                data.bonuses,
               )
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
               const todayActivities = todaysActivities(data.activities, student.id)
@@ -111,7 +114,14 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
                     <div className="absolute left-1 top-1 bottom-1 w-0.5 bg-slate-200" />
                     {yearMonths.map((m) => {
                       const isHeadline = m === headlineMonth
-                      const amount = studentMonthTotal(data.assignments, data.monthlyGrades, student.id, m, baseAllowance)
+                      const amount = studentMonthTotal(
+                        data.assignments,
+                        data.monthlyGrades,
+                        student.id,
+                        m,
+                        baseAllowance,
+                        data.bonuses,
+                      )
                       return (
                         <div key={m} className="relative flex flex-col leading-tight py-[3px]">
                           <span
@@ -153,7 +163,7 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
                         ))}
                       </div>
                     )}
-                    {baseAllowance > 0 ? (
+                    {baseAllowance > 0 || bonus !== 0 ? (
                       <div className={`rounded-2xl ${c.bg} px-4 py-3 space-y-1`}>
                         <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
                           <span>Fix</span>
@@ -163,6 +173,15 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
                           <span>Eredményekből</span>
                           <span>{formatHuf(grades)}</span>
                         </div>
+                        {bonus !== 0 && (
+                          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
+                            <span>Bónusz/levonás</span>
+                            <span>
+                              {bonus > 0 ? '+' : ''}
+                              {formatHuf(bonus)}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between pt-1 border-t border-black/10">
                           <span className="text-sm font-semibold text-slate-600 capitalize">
                             {formatMonthLabel(headlineMonth)}
