@@ -71,6 +71,20 @@ export function monthsWithData(monthlyGrades: MonthlyGrade[], assignmentIds: str
   return Array.from(keys).sort().reverse()
 }
 
+const MONTH_NAMES_SHORT = [
+  'Jan', 'Feb', 'Már', 'Ápr', 'Máj', 'Jún', 'Júl', 'Aug', 'Szep', 'Okt', 'Nov', 'Dec',
+]
+
+export function formatMonthShort(key: string): string {
+  const m = Number(key.split('-')[1])
+  return MONTH_NAMES_SHORT[m - 1]
+}
+
+/** yyyy-mm keys for January through December of the given year (defaults to the current year). */
+export function monthsOfYear(year: number = new Date().getFullYear()): string[] {
+  return Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`)
+}
+
 export const STUDENT_COLORS: Record<StudentColor, { bg: string; border: string; text: string; solid: string }> = {
   grape: { bg: 'bg-grape/10', border: 'border-grape', text: 'text-grape', solid: 'bg-grape' },
   bubblegum: { bg: 'bg-bubblegum/10', border: 'border-bubblegum', text: 'text-bubblegum', solid: 'bg-bubblegum' },

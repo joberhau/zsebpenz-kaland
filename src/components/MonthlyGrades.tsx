@@ -10,8 +10,9 @@ import {
   currentMonthKey,
   formatHuf,
   formatMonthLabel,
+  formatMonthShort,
   gradeForAssignment,
-  monthsWithData,
+  monthsOfYear,
   shiftMonth,
   studentMonthTotal,
 } from '../utils'
@@ -38,10 +39,8 @@ export default function MonthlyGrades({
   onChange,
 }: MonthlyGradesProps) {
   const studentAssignments = assignments.filter((a) => a.studentId === studentId)
-  const months = useMemo(
-    () => monthsWithData(monthlyGrades, studentAssignments.map((a) => a.id)),
-    [monthlyGrades, studentAssignments],
-  )
+  const currentYear = new Date().getFullYear()
+  const yearMonths = useMemo(() => monthsOfYear(currentYear), [currentYear])
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey())
   const colors = STUDENT_COLORS[color]
   const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth, baseAllowance)
@@ -168,25 +167,37 @@ export default function MonthlyGrades({
         )}
       </div>
 
-      {months.length > 1 && (
-        <div className="bg-white rounded-3xl border-4 border-slate-100 p-5">
-          <h4 className="font-display font-bold text-slate-700 mb-2 text-sm">Korábbi hónapok</h4>
-          <ul className="text-sm divide-y divide-slate-100">
-            {months
-              .filter((m) => m !== selectedMonth)
-              .map((m) => (
-                <li key={m} className="flex items-center justify-between py-2">
-                  <button onClick={() => setSelectedMonth(m)} className="text-slate-500 hover:text-grape font-semibold">
-                    {formatMonthLabel(m)}
-                  </button>
-                  <span className="font-semibold text-slate-700">
-                    {formatHuf(studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance))}
-                  </span>
-                </li>
-              ))}
-          </ul>
+      <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">
+        <h4 className="font-display font-bold text-slate-700 mb-4 text-sm">Éves idővonal · {currentYear}</h4>
+        <div className="relative pl-6">
+          <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-200" />
+          {yearMonths.map((m) => {
+            const isSelected = m === selectedMonth
+            const isCurrent = m === currentMonthKey()
+            const amount = studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance)
+            return (
+              <button
+                key={m}
+                onClick={() => setSelectedMonth(m)}
+                className="relative flex items-center justify-between w-full py-2 text-left"
+              >
+                <span
+                  className={`absolute -left-6 w-3.5 h-3.5 rounded-full border-2 ${
+                    isSelected ? `${colors.solid} border-transparent` : 'bg-white border-slate-300'
+                  }`}
+                />
+                <span className={`text-sm font-semibold ${isSelected ? colors.text : 'text-slate-600'}`}>
+                  {formatMonthShort(m)}
+                  {isCurrent && <span className="text-slate-400 font-normal"> · ma</span>}
+                </span>
+                <span className={`font-semibold ${amount > 0 ? 'text-slate-700' : 'text-slate-300'}`}>
+                  {formatHuf(amount)}
+                </span>
+              </button>
+            )
+          })}
         </div>
-      )}
+      </div>
     </div>
   )
 }
