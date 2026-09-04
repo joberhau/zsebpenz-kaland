@@ -183,6 +183,19 @@ export function playFireworkBoom(): void {
   }
 }
 
+/** Bigger bomb blast — one loud boom plus two smaller staggered echoes, timed with the explosion visual. */
+export function playBombSound(): void {
+  try {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    boom(ctx, now, 0.55)
+    boom(ctx, now + 0.12, 0.4)
+    boom(ctx, now + 0.26, 0.28)
+  } catch {
+    // Web Audio unavailable — fail silently, sound is a nice-to-have.
+  }
+}
+
 /** Procedurally synthesized ovation — claps, whistles and cartoon "whoop!" cheers. No audio assets needed. */
 export function playApplause(): void {
   try {
