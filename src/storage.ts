@@ -10,10 +10,10 @@ function uid(): string {
 
 function seedData(): AppData {
   const subjects: Subject[] = [
-    { id: uid(), name: 'Matek' },
-    { id: uid(), name: 'Írás' },
-    { id: uid(), name: 'Olvasás' },
-    { id: uid(), name: 'Angol' },
+    { id: uid(), name: 'Matek', icon: '🧮' },
+    { id: uid(), name: 'Írás', icon: '✍️' },
+    { id: uid(), name: 'Olvasás', icon: '📖' },
+    { id: uid(), name: 'Angol', icon: '🌍' },
   ]
   const [matek, iras, olvasas, angol] = subjects
 

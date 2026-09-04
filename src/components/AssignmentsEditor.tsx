@@ -15,7 +15,9 @@ const GRADES: Grade[] = [1, 2, 3, 4, 5]
 export default function AssignmentsEditor({ studentId, subjects, assignments, onChange }: AssignmentsEditorProps) {
   const assigned = assignments.filter((a) => a.studentId === studentId)
   const assignedSubjectIds = new Set(assigned.map((a) => a.subjectId))
-  const available = subjects.filter((s) => !assignedSubjectIds.has(s.id))
+  const available = subjects
+    .filter((s) => !assignedSubjectIds.has(s.id))
+    .sort((a, b) => a.name.localeCompare(b.name, 'hu'))
   const [pickerId, setPickerId] = useState('')
 
   function updateValues(assignmentId: string, grade: Grade, raw: string) {
@@ -102,7 +104,13 @@ export default function AssignmentsEditor({ studentId, subjects, assignments, on
                   </tr>
                 </thead>
                 <tbody>
-                  {assigned.map((assignment) => {
+                  {[...assigned]
+                    .sort((a, b) => {
+                      const nameA = subjects.find((s) => s.id === a.subjectId)?.name ?? ''
+                      const nameB = subjects.find((s) => s.id === b.subjectId)?.name ?? ''
+                      return nameA.localeCompare(nameB, 'hu')
+                    })
+                    .map((assignment) => {
                     const subject = subjects.find((s) => s.id === assignment.subjectId)
                     return (
                       <tr key={assignment.id} className="bg-slate-50">

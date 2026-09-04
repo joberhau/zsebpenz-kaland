@@ -8,6 +8,7 @@ export type AvatarId = 'girl' | 'boy' | 'teen'
 export interface Subject {
   id: string
   name: string
+  icon: string
 }
 
 export interface Student {

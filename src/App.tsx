@@ -73,13 +73,19 @@ export default function App() {
     setSelectedStudentId(null)
   }
 
-  function addSubject(name: string) {
-    updateData({ subjects: [...data.subjects, { id: uid(), name }] })
+  function addSubject(name: string, icon: string) {
+    updateData({ subjects: [...data.subjects, { id: uid(), name, icon }] })
   }
 
   function renameSubject(id: string, name: string) {
     updateData({
       subjects: data.subjects.map((s) => (s.id === id ? { ...s, name } : s)),
+    })
+  }
+
+  function changeSubjectIcon(id: string, icon: string) {
+    updateData({
+      subjects: data.subjects.map((s) => (s.id === id ? { ...s, icon } : s)),
     })
   }
 
@@ -139,6 +145,7 @@ export default function App() {
           subjects={data.subjects}
           onCreate={addSubject}
           onRename={renameSubject}
+          onIconChange={changeSubjectIcon}
           onDelete={deleteSubject}
         />
       )}
