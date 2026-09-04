@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import type { AppData } from '../types'
-import { STUDENT_COLORS, bonusMonthTotal, currentMonthKey, formatHuf, gradeBasedTotal, studentMonthTotal } from '../utils'
+import {
+  STUDENT_COLORS,
+  bonusMonthNegative,
+  bonusMonthPositive,
+  bonusMonthTotal,
+  currentMonthKey,
+  formatHuf,
+  gradeBasedTotal,
+  studentMonthTotal,
+} from '../utils'
 import { printSubjectTable, printTimetable } from '../print'
 import { Avatar } from './Avatars'
 import AssignmentsEditor from './AssignmentsEditor'
@@ -30,6 +39,8 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
   const month = currentMonthKey()
   const grades = gradeBasedTotal(data.assignments, data.monthlyGrades, studentId, month)
   const bonus = bonusMonthTotal(data.bonuses, studentId, month)
+  const bonusPositive = bonusMonthPositive(data.bonuses, studentId, month)
+  const bonusNegative = bonusMonthNegative(data.bonuses, studentId, month)
   const total = studentMonthTotal(data.assignments, data.monthlyGrades, studentId, month, baseAllowance, data.bonuses)
 
   return (
@@ -76,9 +87,12 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
             <span className={`font-display text-3xl font-extrabold ${colors.text}`}>{formatHuf(total)}</span>
           </div>
           {(baseAllowance > 0 || bonus !== 0) && (
-            <div className="text-xs text-slate-400 font-semibold mt-1">
-              Fix: {formatHuf(baseAllowance)} + Tanulási: {formatHuf(grades)}
-              {bonus !== 0 && ` ${bonus > 0 ? '+' : ''}${formatHuf(bonus)} (bónusz/levonás)`}
+            <div className="text-xs font-semibold mt-1 space-y-0.5">
+              <div className="text-slate-400">
+                Fix: {formatHuf(baseAllowance)} + Tanulási: {formatHuf(grades)}
+              </div>
+              {bonusPositive > 0 && <div className="text-mint">Bónusz: +{formatHuf(bonusPositive)}</div>}
+              {bonusNegative > 0 && <div className="text-bubblegum">Levonás: -{formatHuf(bonusNegative)}</div>}
             </div>
           )}
         </div>

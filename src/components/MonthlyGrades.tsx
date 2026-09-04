@@ -7,6 +7,8 @@ import {
   GRADE_COLORS,
   STUDENT_COLORS,
   assignmentValue,
+  bonusMonthNegative,
+  bonusMonthPositive,
   bonusMonthTotal,
   currentMonthKey,
   formatHuf,
@@ -47,6 +49,8 @@ export default function MonthlyGrades({
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey())
   const colors = STUDENT_COLORS[color]
   const bonus = bonusMonthTotal(bonuses, studentId, selectedMonth)
+  const bonusPositive = bonusMonthPositive(bonuses, studentId, selectedMonth)
+  const bonusNegative = bonusMonthNegative(bonuses, studentId, selectedMonth)
   const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth, baseAllowance, bonuses)
 
   function setGrade(assignmentId: string, grade: Grade) {
@@ -165,9 +169,12 @@ export default function MonthlyGrades({
           <span className={`font-display text-3xl font-extrabold ${colors.text}`}>{formatHuf(total)}</span>
         </div>
         {(baseAllowance > 0 || bonus !== 0) && (
-          <div className="text-xs text-slate-400 font-semibold mt-1">
-            Fix: {formatHuf(baseAllowance)} + Tanulási: {formatHuf(total - baseAllowance - bonus)}
-            {bonus !== 0 && ` ${bonus > 0 ? '+' : ''}${formatHuf(bonus)} (bónusz/levonás)`}
+          <div className="text-xs font-semibold mt-1 space-y-0.5">
+            <div className="text-slate-400">
+              Fix: {formatHuf(baseAllowance)} + Tanulási: {formatHuf(total - baseAllowance - bonus)}
+            </div>
+            {bonusPositive > 0 && <div className="text-mint">Bónusz: +{formatHuf(bonusPositive)}</div>}
+            {bonusNegative > 0 && <div className="text-bubblegum">Levonás: -{formatHuf(bonusNegative)}</div>}
           </div>
         )}
       </div>

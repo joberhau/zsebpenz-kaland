@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import type { AppData } from '../types'
 import {
   STUDENT_COLORS,
+  bonusMonthNegative,
+  bonusMonthPositive,
   bonusMonthTotal,
   currentMonthKey,
   formatHuf,
@@ -93,6 +95,8 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
               const baseAllowance = student.baseAllowance ?? 0
               const grades = gradeBasedTotal(data.assignments, data.monthlyGrades, student.id, headlineMonth)
               const bonus = bonusMonthTotal(data.bonuses, student.id, headlineMonth)
+              const bonusPositive = bonusMonthPositive(data.bonuses, student.id, headlineMonth)
+              const bonusNegative = bonusMonthNegative(data.bonuses, student.id, headlineMonth)
               const total = studentMonthTotal(
                 data.assignments,
                 data.monthlyGrades,
@@ -173,13 +177,16 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
                           <span>Eredményekből</span>
                           <span>{formatHuf(grades)}</span>
                         </div>
-                        {bonus !== 0 && (
-                          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
-                            <span>Bónusz/levonás</span>
-                            <span>
-                              {bonus > 0 ? '+' : ''}
-                              {formatHuf(bonus)}
-                            </span>
+                        {bonusPositive > 0 && (
+                          <div className="flex items-center justify-between text-xs font-semibold text-mint">
+                            <span>Bónusz</span>
+                            <span>+{formatHuf(bonusPositive)}</span>
+                          </div>
+                        )}
+                        {bonusNegative > 0 && (
+                          <div className="flex items-center justify-between text-xs font-semibold text-bubblegum">
+                            <span>Levonás</span>
+                            <span>-{formatHuf(bonusNegative)}</span>
                           </div>
                         )}
                         <div className="flex items-center justify-between pt-1 border-t border-black/10">

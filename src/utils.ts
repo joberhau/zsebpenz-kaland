@@ -69,6 +69,20 @@ export function bonusMonthTotal(bonuses: Bonus[], studentId: string, month: stri
     .reduce((sum, b) => sum + b.amount, 0)
 }
 
+/** Sum of positive bonus amounts for the month (always >= 0). */
+export function bonusMonthPositive(bonuses: Bonus[], studentId: string, month: string): number {
+  return studentBonuses(bonuses, studentId)
+    .filter((b) => b.date.slice(0, 7) === month && b.amount > 0)
+    .reduce((sum, b) => sum + b.amount, 0)
+}
+
+/** Sum of penalty amounts for the month, returned as a positive number (always >= 0). */
+export function bonusMonthNegative(bonuses: Bonus[], studentId: string, month: string): number {
+  return studentBonuses(bonuses, studentId)
+    .filter((b) => b.date.slice(0, 7) === month && b.amount < 0)
+    .reduce((sum, b) => sum - b.amount, 0)
+}
+
 export function studentMonthTotal(
   assignments: Assignment[],
   monthlyGrades: MonthlyGrade[],
