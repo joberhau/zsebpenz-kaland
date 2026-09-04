@@ -59,6 +59,12 @@ export default function MonthlyGrades({
     })
   }
 
+  function clearGrade(assignmentId: string) {
+    const existing = gradeForAssignment(monthlyGrades, assignmentId, selectedMonth)
+    if (!existing) return
+    onChange(monthlyGrades.filter((g) => g.id !== existing.id))
+  }
+
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">
@@ -106,8 +112,19 @@ export default function MonthlyGrades({
                     <span className="font-semibold text-slate-700 truncate">
                       {subject?.name ?? '(törölt tantárgy)'}
                     </span>
-                    <span className="font-display font-bold text-slate-600 shrink-0">
-                      {current ? formatHuf(value) : '—'}
+                    <span className="flex items-center gap-2 shrink-0">
+                      <span className="font-display font-bold text-slate-600">
+                        {current ? formatHuf(value) : '—'}
+                      </span>
+                      {current && (
+                        <button
+                          onClick={() => clearGrade(assignment.id)}
+                          className="text-slate-300 hover:text-bubblegum font-bold px-1"
+                          title="Jegy törlése"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </span>
                   </div>
                   <div className="text-xs font-semibold text-slate-400 mb-1.5 ml-0.5">Érdemjegy</div>
