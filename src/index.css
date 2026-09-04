@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Baloo 2", system-ui, sans-serif;
+  --font-body: Fredoka, system-ui, sans-serif;
+
+  --color-grape: #7C4DFF;
+  --color-bubblegum: #FF5DA2;
+  --color-tangerine: #FF9F45;
+  --color-lemon: #FFD93D;
+  --color-mint: #3DDC97;
+  --color-sky: #3DB2FF;
+
+  --shadow-pop: 0 8px 0 rgba(0, 0, 0, 0.12);
+  --shadow-popsm: 0 4px 0 rgba(0, 0, 0, 0.12);
+
+  --animate-wiggle: wiggle 1.2s ease-in-out infinite;
+  --animate-popin: popin 0.25s ease-out;
+  --animate-float: float 3.5s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@keyframes popin {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Fredoka, system-ui, sans-serif;
+  background: #FFF7EE;
+  color: #3A2E4D;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Baloo 2', system-ui, sans-serif;
+}
+
+::selection {
+  background: #FFD93D;
+}
+
+.btn-pop {
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.btn-pop:active {
+  transform: translateY(4px);
+  box-shadow: none !important;
+}

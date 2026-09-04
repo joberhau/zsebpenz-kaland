@@ -1,0 +1,26 @@
+{
+  "name": "zsebpe-nz",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "canvas-confetti": "^1.9.4",
+    "typescript": "~6.0.2",
+    "vite": "^5.4.11"
+  }
+}
