@@ -45,3 +45,93 @@ export function playGradeSound(grade: number): void {
     // Web Audio unavailable — fail silently, sound is a nice-to-have.
   }
 }
+
+let noiseBuffer: AudioBuffer | null = null
+
+function getNoiseBuffer(ctx: AudioContext): AudioBuffer {
+  if (!noiseBuffer) {
+    const seconds = 0.15
+    const size = Math.floor(ctx.sampleRate * seconds)
+    noiseBuffer = ctx.createBuffer(1, size, ctx.sampleRate)
+    const data = noiseBuffer.getChannelData(0)
+    for (let i = 0; i < size; i++) data[i] = Math.random() * 2 - 1
+  }
+  return noiseBuffer
+}
+
+function clap(ctx: AudioContext, buffer: AudioBuffer, time: number, gainPeak: number) {
+  const source = ctx.createBufferSource()
+  source.buffer = buffer
+  const bandpass = ctx.createBiquadFilter()
+  bandpass.type = 'bandpass'
+  bandpass.frequency.value = 1200 + Math.random() * 3000
+  bandpass.Q.value = 0.6
+  const gain = ctx.createGain()
+  gain.gain.setValueAtTime(0, time)
+  gain.gain.linearRampToValueAtTime(gainPeak, time + 0.004)
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.06 + Math.random() * 0.05)
+  source.connect(bandpass)
+  bandpass.connect(gain)
+  gain.connect(ctx.destination)
+  source.start(time)
+  source.stop(time + 0.15)
+}
+
+function whistle(ctx: AudioContext, time: number, gainPeak = 0.16) {
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(900, time)
+  osc.frequency.linearRampToValueAtTime(2600, time + 0.22)
+  osc.frequency.linearRampToValueAtTime(2000, time + 0.4)
+  gain.gain.setValueAtTime(0, time)
+  gain.gain.linearRampToValueAtTime(gainPeak, time + 0.04)
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.42)
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.start(time)
+  osc.stop(time + 0.45)
+}
+
+function whoop(ctx: AudioContext, time: number, gainPeak = 0.18) {
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.type = 'sawtooth'
+  osc.frequency.setValueAtTime(320, time)
+  osc.frequency.exponentialRampToValueAtTime(880, time + 0.14)
+  osc.frequency.exponentialRampToValueAtTime(500, time + 0.32)
+  const filter = ctx.createBiquadFilter()
+  filter.type = 'lowpass'
+  filter.frequency.value = 2200
+  gain.gain.setValueAtTime(0, time)
+  gain.gain.linearRampToValueAtTime(gainPeak, time + 0.03)
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.35)
+  osc.connect(filter)
+  filter.connect(gain)
+  gain.connect(ctx.destination)
+  osc.start(time)
+  osc.stop(time + 0.38)
+}
+
+/** Procedurally synthesized ovation — claps, whistles and cartoon "whoop!" cheers. No audio assets needed. */
+export function playApplause(): void {
+  try {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    const buffer = getNoiseBuffer(ctx)
+    const duration = 1.8
+    const clapCount = 70
+    for (let i = 0; i < clapCount; i++) {
+      const t = Math.pow(Math.random(), 1.4) * duration // denser near the start, tapering off
+      const gainPeak = 0.12 + Math.random() * 0.16
+      clap(ctx, buffer, now + t, gainPeak)
+    }
+    whistle(ctx, now + 0.1)
+    whistle(ctx, now + 0.75)
+    whoop(ctx, now + 0.05)
+    whoop(ctx, now + 0.5)
+    whoop(ctx, now + 1.0)
+  } catch {
+    // Web Audio unavailable — fail silently, sound is a nice-to-have.
+  }
+}

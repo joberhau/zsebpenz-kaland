@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Assignment, Bonus, Grade, MonthlyGrade, StudentColor, Subject } from '../types'
 import { uid } from '../storage'
-import { playGradeSound } from '../sound'
+import { playApplause, playGradeSound } from '../sound'
 import { celebrateGrade } from '../celebrate'
 import {
   GRADE_COLORS,
@@ -63,6 +63,7 @@ export default function MonthlyGrades({
     }
     celebrateGrade(grade)
     playGradeSound(grade)
+    if (grade === 5) playApplause()
   }
 
   function clearGrade(assignmentId: string) {
