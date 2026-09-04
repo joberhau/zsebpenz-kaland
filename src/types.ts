@@ -16,6 +16,8 @@ export interface Student {
   name: string
   avatar: AvatarId
   color: StudentColor
+  /** Fixed monthly allowance (Ft), independent of grades — grade-based payout adds on top. */
+  baseAllowance: number
 }
 
 /** A subject assigned to a student, with its own grade -> Ft reward table. */

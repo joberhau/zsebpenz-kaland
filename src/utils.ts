@@ -42,7 +42,7 @@ export function assignmentValue(assignment: Assignment, monthlyGrades: MonthlyGr
   return assignment.values[entry.grade] ?? 0
 }
 
-export function studentMonthTotal(
+export function gradeBasedTotal(
   assignments: Assignment[],
   monthlyGrades: MonthlyGrade[],
   studentId: string,
@@ -52,6 +52,16 @@ export function studentMonthTotal(
     (sum, a) => sum + assignmentValue(a, monthlyGrades, month),
     0,
   )
+}
+
+export function studentMonthTotal(
+  assignments: Assignment[],
+  monthlyGrades: MonthlyGrade[],
+  studentId: string,
+  month: string,
+  baseAllowance = 0,
+): number {
+  return baseAllowance + gradeBasedTotal(assignments, monthlyGrades, studentId, month)
 }
 
 export function monthsWithData(monthlyGrades: MonthlyGrade[], assignmentIds: string[]): string[] {

@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import type { AvatarId, Student, StudentColor } from '../types'
-import { STUDENT_COLORS } from '../utils'
+import { STUDENT_COLORS, formatHuf } from '../utils'
 import { Avatar } from './Avatars'
 import StudentFormModal from './StudentFormModal'
 
 interface StudentsManagerProps {
   students: Student[]
   onSelectStudent: (id: string) => void
-  onCreate: (name: string, avatar: AvatarId, color: StudentColor) => void
-  onUpdate: (id: string, name: string, avatar: AvatarId, color: StudentColor) => void
+  onCreate: (name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) => void
+  onUpdate: (id: string, name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) => void
   onDelete: (id: string) => void
 }
 
@@ -61,7 +61,14 @@ export default function StudentsManager({
                   <div className={`w-14 h-14 rounded-2xl ${c.bg} flex items-center justify-center overflow-hidden shrink-0`}>
                     <Avatar id={student.avatar} size={50} />
                   </div>
-                  <span className="font-display text-lg font-bold text-slate-800 truncate">{student.name}</span>
+                  <div className="min-w-0">
+                    <div className="font-display text-lg font-bold text-slate-800 truncate">{student.name}</div>
+                    {(student.baseAllowance ?? 0) > 0 && (
+                      <div className="text-xs text-slate-400 font-semibold">
+                        Fix: {formatHuf(student.baseAllowance)}/hó
+                      </div>
+                    )}
+                  </div>
                 </button>
                 <button
                   onClick={() => setModal(student)}
@@ -88,8 +95,8 @@ export default function StudentsManager({
       {modal === 'add' && (
         <StudentFormModal
           onCancel={() => setModal(null)}
-          onSave={(name, avatar, color) => {
-            onCreate(name, avatar, color)
+          onSave={(name, avatar, color, baseAllowance) => {
+            onCreate(name, avatar, color, baseAllowance)
             setModal(null)
           }}
         />
@@ -98,8 +105,8 @@ export default function StudentsManager({
         <StudentFormModal
           initial={modal}
           onCancel={() => setModal(null)}
-          onSave={(name, avatar, color) => {
-            onUpdate(modal.id, name, avatar, color)
+          onSave={(name, avatar, color, baseAllowance) => {
+            onUpdate(modal.id, name, avatar, color, baseAllowance)
             setModal(null)
           }}
         />

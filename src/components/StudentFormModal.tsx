@@ -6,7 +6,7 @@ import { AVATARS } from './Avatars'
 interface StudentFormModalProps {
   initial?: Student
   onCancel: () => void
-  onSave: (name: string, avatar: AvatarId, color: StudentColor) => void
+  onSave: (name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) => void
 }
 
 const COLORS: StudentColor[] = ['grape', 'bubblegum', 'tangerine', 'mint', 'sky']
@@ -15,6 +15,7 @@ export default function StudentFormModal({ initial, onCancel, onSave }: StudentF
   const [name, setName] = useState(initial?.name ?? '')
   const [avatar, setAvatar] = useState<AvatarId>(initial?.avatar ?? 'girl')
   const [color, setColor] = useState<StudentColor>(initial?.color ?? 'grape')
+  const [baseAllowance, setBaseAllowance] = useState(String(initial?.baseAllowance ?? 0))
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-6 z-50 overflow-y-auto">
@@ -51,7 +52,7 @@ export default function StudentFormModal({ initial, onCancel, onSave }: StudentF
         </div>
 
         <label className="text-sm font-semibold text-slate-600 ml-1">Szín</label>
-        <div className="flex gap-2 mt-1 mb-6">
+        <div className="flex gap-2 mt-1 mb-4">
           {COLORS.map((c) => (
             <button
               key={c}
@@ -63,6 +64,19 @@ export default function StudentFormModal({ initial, onCancel, onSave }: StudentF
           ))}
         </div>
 
+        <label className="text-sm font-semibold text-slate-600 ml-1">Fix havi zsebpénz (Ft)</label>
+        <p className="text-xs text-slate-400 ml-1 mb-1">
+          A jegyektől független alapösszeg — a tanulási eredmény ehhez adódik hozzá.
+        </p>
+        <input
+          type="number"
+          min={0}
+          value={baseAllowance}
+          onChange={(e) => setBaseAllowance(e.target.value)}
+          placeholder="0"
+          className="w-full mt-1 mb-6 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-grape focus:outline-none"
+        />
+
         <div className="flex gap-3">
           <button
             onClick={onCancel}
@@ -71,7 +85,9 @@ export default function StudentFormModal({ initial, onCancel, onSave }: StudentF
             Mégse
           </button>
           <button
-            onClick={() => name.trim() && onSave(name.trim(), avatar, color)}
+            onClick={() =>
+              name.trim() && onSave(name.trim(), avatar, color, Math.max(0, Number(baseAllowance) || 0))
+            }
             disabled={!name.trim()}
             className="btn-pop flex-1 py-3 rounded-2xl font-display font-bold text-white bg-mint shadow-pop disabled:opacity-40"
           >

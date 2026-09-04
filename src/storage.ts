@@ -17,7 +17,7 @@ function seedData(): AppData {
   ]
   const [matek, iras, olvasas, angol] = subjects
 
-  const anna: Student = { id: uid(), name: 'Anna', avatar: 'girl', color: 'bubblegum' }
+  const anna: Student = { id: uid(), name: 'Anna', avatar: 'girl', color: 'bubblegum', baseAllowance: 0 }
 
   const assignments: Assignment[] = [
     { id: uid(), studentId: anna.id, subjectId: matek.id, values: { 1: 0, 2: 0, 3: 0, 4: 500, 5: 1000 } },

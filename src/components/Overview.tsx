@@ -42,7 +42,13 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
           <div className="grid sm:grid-cols-2 gap-4">
             {data.students.map((student) => {
               const c = STUDENT_COLORS[student.color]
-              const total = studentMonthTotal(data.assignments, data.monthlyGrades, student.id, month)
+              const total = studentMonthTotal(
+                data.assignments,
+                data.monthlyGrades,
+                student.id,
+                month,
+                student.baseAllowance ?? 0,
+              )
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
               const todayActivities = todaysActivities(data.activities, student.id)
               return (

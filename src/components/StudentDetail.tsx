@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { AppData } from '../types'
-import { STUDENT_COLORS, currentMonthKey, formatHuf, studentMonthTotal } from '../utils'
+import { STUDENT_COLORS, currentMonthKey, formatHuf, gradeBasedTotal, studentMonthTotal } from '../utils'
 import { Avatar } from './Avatars'
 import AssignmentsEditor from './AssignmentsEditor'
 import MonthlyGrades from './MonthlyGrades'
@@ -23,7 +23,10 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
   if (!student) return null
 
   const colors = STUDENT_COLORS[student.color]
-  const total = studentMonthTotal(data.assignments, data.monthlyGrades, studentId, currentMonthKey())
+  const baseAllowance = student.baseAllowance ?? 0
+  const month = currentMonthKey()
+  const grades = gradeBasedTotal(data.assignments, data.monthlyGrades, studentId, month)
+  const total = studentMonthTotal(data.assignments, data.monthlyGrades, studentId, month, baseAllowance)
 
   return (
     <div>
@@ -64,9 +67,16 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
       </header>
 
       <main className="max-w-5xl mx-auto px-5 py-6">
-        <div className={`rounded-3xl ${colors.bg} border-4 ${colors.border} px-6 py-5 mb-6 flex items-center justify-between flex-wrap gap-2`}>
-          <span className="font-semibold text-slate-600">E havi összegyűjtött zsebpénz</span>
-          <span className={`font-display text-3xl font-extrabold ${colors.text}`}>{formatHuf(total)}</span>
+        <div className={`rounded-3xl ${colors.bg} border-4 ${colors.border} px-6 py-5 mb-6`}>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="font-semibold text-slate-600">E havi összegyűjtött zsebpénz</span>
+            <span className={`font-display text-3xl font-extrabold ${colors.text}`}>{formatHuf(total)}</span>
+          </div>
+          {baseAllowance > 0 && (
+            <div className="text-xs text-slate-400 font-semibold mt-1">
+              Fix: {formatHuf(baseAllowance)} + Tanulási: {formatHuf(grades)}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 mb-6 bg-white p-1.5 rounded-2xl border-4 border-slate-100 w-fit">
@@ -100,6 +110,7 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
           <MonthlyGrades
             studentId={studentId}
             color={student.color}
+            baseAllowance={baseAllowance}
             subjects={data.subjects}
             assignments={data.assignments}
             monthlyGrades={data.monthlyGrades}

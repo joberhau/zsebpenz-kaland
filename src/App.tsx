@@ -50,14 +50,14 @@ export default function App() {
     })
   }
 
-  function addStudent(name: string, avatar: AvatarId, color: StudentColor) {
-    const student: Student = { id: uid(), name, avatar, color }
+  function addStudent(name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) {
+    const student: Student = { id: uid(), name, avatar, color, baseAllowance }
     updateData({ students: [...data.students, student] })
   }
 
-  function updateStudent(id: string, name: string, avatar: AvatarId, color: StudentColor) {
+  function updateStudent(id: string, name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) {
     updateData({
-      students: data.students.map((s) => (s.id === id ? { ...s, name, avatar, color } : s)),
+      students: data.students.map((s) => (s.id === id ? { ...s, name, avatar, color, baseAllowance } : s)),
     })
   }
 

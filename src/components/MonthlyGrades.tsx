@@ -19,6 +19,7 @@ import {
 interface MonthlyGradesProps {
   studentId: string
   color: StudentColor
+  baseAllowance: number
   subjects: Subject[]
   assignments: Assignment[]
   monthlyGrades: MonthlyGrade[]
@@ -30,6 +31,7 @@ const GRADES: Grade[] = [1, 2, 3, 4, 5]
 export default function MonthlyGrades({
   studentId,
   color,
+  baseAllowance,
   subjects,
   assignments,
   monthlyGrades,
@@ -42,7 +44,7 @@ export default function MonthlyGrades({
   )
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey())
   const colors = STUDENT_COLORS[color]
-  const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth)
+  const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth, baseAllowance)
 
   function setGrade(assignmentId: string, grade: Grade) {
     const existing = gradeForAssignment(monthlyGrades, assignmentId, selectedMonth)
@@ -154,9 +156,16 @@ export default function MonthlyGrades({
         )}
       </div>
 
-      <div className={`rounded-3xl ${colors.bg} border-4 ${colors.border} px-6 py-5 flex items-center justify-between flex-wrap gap-2`}>
-        <span className="font-semibold text-slate-600">Összesen {formatMonthLabel(selectedMonth)}</span>
-        <span className={`font-display text-3xl font-extrabold ${colors.text}`}>{formatHuf(total)}</span>
+      <div className={`rounded-3xl ${colors.bg} border-4 ${colors.border} px-6 py-5`}>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <span className="font-semibold text-slate-600">Összesen {formatMonthLabel(selectedMonth)}</span>
+          <span className={`font-display text-3xl font-extrabold ${colors.text}`}>{formatHuf(total)}</span>
+        </div>
+        {baseAllowance > 0 && (
+          <div className="text-xs text-slate-400 font-semibold mt-1">
+            Fix: {formatHuf(baseAllowance)} + Tanulási: {formatHuf(total - baseAllowance)}
+          </div>
+        )}
       </div>
 
       {months.length > 1 && (
@@ -171,7 +180,7 @@ export default function MonthlyGrades({
                     {formatMonthLabel(m)}
                   </button>
                   <span className="font-semibold text-slate-700">
-                    {formatHuf(studentMonthTotal(assignments, monthlyGrades, studentId, m))}
+                    {formatHuf(studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance))}
                   </span>
                 </li>
               ))}
