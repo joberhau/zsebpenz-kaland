@@ -9,6 +9,7 @@ const confettiWithShapeFromText = confetti as unknown as {
 }
 
 let sadShape: unknown = null
+let explosionShape: unknown = null
 
 function getSadShape(): unknown {
   if (!sadShape) {
@@ -17,9 +18,35 @@ function getSadShape(): unknown {
   return sadShape
 }
 
-/** Confetti for a good grade (4-5), a light burst for an average one (3), sad faces falling for a bad one (1-2). */
+function getExplosionShape(): unknown {
+  if (!explosionShape) {
+    explosionShape = confettiWithShapeFromText.shapeFromText({ text: '💥', scalar: 3 })
+  }
+  return explosionShape
+}
+
+function shakeScreen(): void {
+  document.body.classList.add('shake')
+  window.setTimeout(() => document.body.classList.remove('shake'), 400)
+}
+
+/** Bomb explosion for a fail (1), sad faces for a near-fail (2), confetti scaled by grade for 3-5. */
 export function celebrateGrade(grade: Grade): void {
-  if (grade <= 2) {
+  if (grade === 1) {
+    shakeScreen()
+    confetti({
+      particleCount: 24,
+      startVelocity: 35,
+      gravity: 0.9,
+      spread: 360,
+      ticks: 100,
+      origin: { y: 0.5, x: 0.5 },
+      shapes: [getExplosionShape()] as never,
+      scalar: 1,
+    })
+    return
+  }
+  if (grade === 2) {
     confetti({
       particleCount: 16,
       startVelocity: 8,

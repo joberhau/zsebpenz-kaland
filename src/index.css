@@ -63,3 +63,14 @@ h1, h2, h3, .font-display {
   transform: translateY(4px);
   box-shadow: none !important;
 }
+
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-6px, 3px); }
+  40% { transform: translate(6px, -3px); }
+  60% { transform: translate(-5px, -2px); }
+  80% { transform: translate(5px, 2px); }
+}
+body.shake {
+  animation: shake 0.4s ease-in-out;
+}
