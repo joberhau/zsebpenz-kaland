@@ -46,6 +46,35 @@ export function playGradeSound(grade: number): void {
   }
 }
 
+function chiptuneTone(ctx: AudioContext, freq: number, startTime: number, duration: number, gainPeak = 0.18) {
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.type = 'square'
+  osc.frequency.value = freq
+  gain.gain.setValueAtTime(0, startTime)
+  gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.01)
+  gain.gain.setValueAtTime(gainPeak, startTime + duration - 0.03)
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration)
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.start(startTime)
+  osc.stop(startTime + duration)
+}
+
+/** Classic retro "game over" jingle: tü-tü-tü-tüüü, descending to a low held note. Crushing, not triumphant. */
+export function playGameOverJingle(): void {
+  try {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    chiptuneTone(ctx, 415.3, now, 0.13) // tü (G#4)
+    chiptuneTone(ctx, 415.3, now + 0.17, 0.13) // tü
+    chiptuneTone(ctx, 415.3, now + 0.34, 0.13) // tü
+    chiptuneTone(ctx, 220.0, now + 0.51, 0.75, 0.22) // tüüü (A3, low, held)
+  } catch {
+    // Web Audio unavailable — fail silently, sound is a nice-to-have.
+  }
+}
+
 let noiseBuffer: AudioBuffer | null = null
 
 function getNoiseBuffer(ctx: AudioContext): AudioBuffer {
