@@ -21,6 +21,7 @@ const EMPTY_DATA: AppData = {
   timetable: [],
   absences: [],
   bonuses: [],
+  notificationLeadMinutes: 60,
 }
 
 export default function App() {
@@ -173,7 +174,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FFF7EE] pb-20">
       {tab === 'overview' && (
-        <Overview data={data} onSelectStudent={setSelectedStudentId} onLogout={() => logOut()} />
+        <Overview
+          data={data}
+          onSelectStudent={setSelectedStudentId}
+          onLogout={() => logOut()}
+          onUpdateData={updateData}
+        />
       )}
       {tab === 'students' && (
         <StudentsManager

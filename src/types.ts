@@ -85,4 +85,6 @@ export interface AppData {
   timetable: TimetableEntry[]
   absences: Absence[]
   bonuses: Bonus[]
+  /** Minutes before an activity's start time to send a push reminder (0 = at start time). */
+  notificationLeadMinutes: number
 }

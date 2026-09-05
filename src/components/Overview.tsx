@@ -17,11 +17,13 @@ import {
   todaysActivities,
 } from '../utils'
 import { Avatar } from './Avatars'
+import PushSettingsModal from './PushSettingsModal'
 
 interface OverviewProps {
   data: AppData
   onSelectStudent: (id: string) => void
   onLogout: () => void
+  onUpdateData: (patch: Partial<AppData>) => void
 }
 
 const HEADLINE_KEY = 'zsebpenz-kaland-headline-offset'
@@ -31,8 +33,9 @@ function loadHeadlineOffset(): number {
   return raw === '-1' ? -1 : 0
 }
 
-export default function Overview({ data, onSelectStudent, onLogout }: OverviewProps) {
+export default function Overview({ data, onSelectStudent, onLogout, onUpdateData }: OverviewProps) {
   const [headlineOffset, setHeadlineOffset] = useState(loadHeadlineOffset)
+  const [showPushSettings, setShowPushSettings] = useState(false)
   const currentYear = new Date().getFullYear()
   const yearMonths = monthsOfYear(currentYear)
   const headlineMonth = shiftMonth(currentMonthKey(), headlineOffset)
@@ -48,13 +51,30 @@ export default function Overview({ data, onSelectStudent, onLogout }: OverviewPr
           <span className="text-3xl">🦄💰</span>
           <h1 className="font-display text-lg sm:text-2xl font-extrabold text-grape">Zsebpénz Kaland</h1>
         </div>
-        <button
-          onClick={onLogout}
-          className="text-sm font-semibold text-slate-500 hover:text-bubblegum transition-colors"
-        >
-          Kilépés
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowPushSettings(true)}
+            className="text-2xl"
+            title="Értesítések"
+          >
+            🔔
+          </button>
+          <button
+            onClick={onLogout}
+            className="text-sm font-semibold text-slate-500 hover:text-bubblegum transition-colors"
+          >
+            Kilépés
+          </button>
+        </div>
       </header>
+
+      {showPushSettings && (
+        <PushSettingsModal
+          notificationLeadMinutes={data.notificationLeadMinutes ?? 60}
+          onChangeLeadMinutes={(notificationLeadMinutes) => onUpdateData({ notificationLeadMinutes })}
+          onClose={() => setShowPushSettings(false)}
+        />
+      )}
 
       <main className="max-w-5xl mx-auto px-5 py-6">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-5">

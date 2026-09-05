@@ -21,6 +21,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^4.3.4",
     "canvas-confetti": "^1.9.4",
+    "firebase-admin": "^14.3.0",
     "typescript": "~6.0.2",
     "vite": "^5.4.11"
   }
