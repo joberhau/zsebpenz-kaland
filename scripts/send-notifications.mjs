@@ -2,7 +2,9 @@
 // "Esemény" (Activity) starts within `notificationLeadMinutes` from now
 // (Europe/Budapest time) and sends a push notification via FCM to every
 // registered device, deduping so the same occurrence is never sent twice.
-import admin from 'firebase-admin'
+import { cert, initializeApp } from 'firebase-admin/app'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
+import { getMessaging } from 'firebase-admin/messaging'
 
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT
 if (!serviceAccountJson) {
@@ -10,11 +12,12 @@ if (!serviceAccountJson) {
   process.exit(1)
 }
 
-admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
+initializeApp({
+  credential: cert(JSON.parse(serviceAccountJson)),
 })
 
-const db = admin.firestore()
+const db = getFirestore()
+const messaging = getMessaging()
 const TOLERANCE_MINUTES = 5
 
 const DAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
@@ -88,7 +91,7 @@ async function main() {
     const when = leadMinutes === 0 ? 'most kezdődik' : `${activity.startTime}-kor kezdődik`
     const body = `${studentName}: ${activity.icon ?? ''} ${activity.name} ${when}!`.trim()
 
-    const response = await admin.messaging().sendEachForMulticast({
+    const response = await messaging.sendEachForMulticast({
       tokens,
       notification: { title: 'Zsebpénz Kaland', body },
     })
@@ -104,7 +107,7 @@ async function main() {
     })
     await Promise.all(staleTokens.map((t) => db.doc(`pushTokens/${t}`).delete()))
 
-    await sentRef.set({ sentAt: admin.firestore.FieldValue.serverTimestamp() })
+    await sentRef.set({ sentAt: FieldValue.serverTimestamp() })
   }
 }
 
