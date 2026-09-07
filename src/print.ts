@@ -14,15 +14,16 @@ const PAGE_STYLE = `
   .meta { font-size: 12px; color: #666; margin-top: 24px; }
 `
 
-function openPrintWindow(title: string, bodyHtml: string) {
+function openPrintWindow(title: string, bodyHtml: string, landscape = false) {
   const win = window.open('', '_blank', 'width=800,height=1000')
   if (!win) {
     alert('A böngésző letiltotta a felugró ablakot — engedélyezd, majd próbáld újra.')
     return
   }
+  const pageStyle = landscape ? `${PAGE_STYLE}\n@page { size: landscape; }` : PAGE_STYLE
   win.document.open()
   win.document.write(
-    `<!doctype html><html lang="hu"><head><meta charset="utf-8"><title>${title}</title><style>${PAGE_STYLE}</style></head><body>${bodyHtml}</body></html>`,
+    `<!doctype html><html lang="hu"><head><meta charset="utf-8"><title>${title}</title><style>${pageStyle}</style></head><body>${bodyHtml}</body></html>`,
   )
   win.document.close()
   win.focus()
@@ -106,7 +107,7 @@ export function printTimetable(student: Student, subjects: Subject[], timetable:
     </table>
     <p class="meta">Nyomtatva: ${new Date().toLocaleDateString('hu-HU')}</p>
   `
-  openPrintWindow(`${student.name} — órarend`, body)
+  openPrintWindow(`${student.name} — órarend`, body, true)
 }
 
 const WEEK_DAYS = [1, 2, 3, 4, 5, 6, 0]
