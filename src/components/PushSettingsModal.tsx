@@ -53,7 +53,14 @@ export default function PushSettingsModal({
             ✓ Az értesítések be vannak kapcsolva ezen az eszközön.
           </p>
         )}
-        {status === 'default' && (
+        {(status === 'timeout' || status === 'error') && (
+          <p className="bg-tangerine/10 rounded-2xl px-4 py-3 text-sm text-tangerine mb-3">
+            {status === 'timeout'
+              ? 'Túl sokáig tartott a bekapcsolás (lassú kapcsolat?) — próbáld újra.'
+              : 'Hiba történt bekapcsolás közben — próbáld újra.'}
+          </p>
+        )}
+        {(status === 'default' || status === 'timeout' || status === 'error') && (
           <button
             onClick={handleEnable}
             disabled={busy}
