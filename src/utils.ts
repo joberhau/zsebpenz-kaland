@@ -160,6 +160,6 @@ export function todaysActivities(activities: Activity[], studentId: string): Act
 }
 
 export const ACTIVITY_ICONS = [
-  '⚽', '🏀', '🎾', '🏊', '🩰', '🎨', '🎹', '🥋', '🏓', '🚴', '🏸', '♟️', '🎤', '🎭', '🧗', '🏒',
+  '⚽', '🏀', '🎾', '🏊', '🩰', '🎨', '🎹', '🥋', '🏓', '🚴', '🏸', '♟️', '🎤', '🎭', '🧗', '🏒', '🧤', '🪕',
 ]
 
