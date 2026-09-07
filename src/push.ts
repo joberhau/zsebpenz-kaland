@@ -34,6 +34,8 @@ export interface EnablePushResult {
   errorMessage?: string
 }
 
+let foregroundListenerRegistered = false
+
 /** Requests notification permission, registers the service worker, gets an FCM token and saves it. */
 export async function enablePush(): Promise<EnablePushResult> {
   if (getPushStatus() === 'unsupported') return { status: 'unsupported' }
@@ -42,7 +44,7 @@ export async function enablePush(): Promise<EnablePushResult> {
   if (permission !== 'granted') return { status: permission }
 
   try {
-    const [{ getMessaging, getToken }, registration] = await withTimeout(
+    const [{ getMessaging, getToken, onMessage }, registration] = await withTimeout(
       Promise.all([import('firebase/messaging'), navigator.serviceWorker.register('/zsebpenz-kaland/firebase-messaging-sw.js')]),
       10000,
     )
@@ -54,6 +56,23 @@ export async function enablePush(): Promise<EnablePushResult> {
     if (token) {
       await withTimeout(setDoc(doc(db, 'pushTokens', token), { token, createdAt: serverTimestamp() }), 10000)
     }
+
+    // Push messages don't show as a system notification while this tab is
+    // focused (only the background service worker does that) — show one
+    // manually so a foreground reminder isn't silently missed.
+    if (!foregroundListenerRegistered) {
+      foregroundListenerRegistered = true
+      onMessage(messaging, (payload) => {
+        const title = payload.notification?.title ?? 'Zsebpénz Kaland'
+        const body = payload.notification?.body ?? ''
+        try {
+          new Notification(title, { body, icon: '/zsebpenz-kaland/icon-192.png' })
+        } catch {
+          // ignore if the Notification constructor isn't usable here
+        }
+      })
+    }
+
     return { status: 'granted' }
   } catch (err) {
     console.error('Push enable failed:', err)
