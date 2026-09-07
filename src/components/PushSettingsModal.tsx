@@ -51,7 +51,7 @@ export default function PushSettingsModal({
           </p>
         )}
         {status === 'granted' && (
-          <p className="bg-mint/10 rounded-2xl px-4 py-3 text-sm text-mint font-semibold mb-5">
+          <p className="bg-mint/10 rounded-2xl px-4 py-3 text-sm text-mint font-semibold mb-3">
             ✓ Az értesítések be vannak kapcsolva ezen az eszközön.
           </p>
         )}
@@ -63,13 +63,17 @@ export default function PushSettingsModal({
             {errorMessage && <span className="block mt-1 font-mono text-xs opacity-75">{errorMessage}</span>}
           </p>
         )}
-        {(status === 'default' || status === 'timeout' || status === 'error') && (
+        {(status === 'default' || status === 'granted' || status === 'timeout' || status === 'error') && (
           <button
             onClick={handleEnable}
             disabled={busy}
             className="btn-pop w-full mb-5 bg-grape text-white font-display font-bold text-lg py-3 rounded-2xl shadow-pop disabled:opacity-60"
           >
-            {busy ? 'Kérés folyamatban...' : 'Értesítések bekapcsolása 🔔'}
+            {busy
+              ? 'Kérés folyamatban...'
+              : status === 'granted'
+                ? 'Frissítés / újraküldés 🔄'
+                : 'Értesítések bekapcsolása 🔔'}
           </button>
         )}
 
