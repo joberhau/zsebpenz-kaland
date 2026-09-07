@@ -248,16 +248,18 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                         {viewDayEntries.length === 0 ? (
                           <p className="text-center text-[11px] text-slate-400 py-1">Nincs óra</p>
                         ) : (
-                          <div className="flex flex-wrap gap-1">
-                            {viewDayEntries.map((entry) => {
+                          <div className="flex flex-col gap-1">
+                            {viewDayEntries.map((entry, i) => {
                               const subject = data.subjects.find((s) => s.id === entry.subjectId)
                               return (
-                                <span
+                                <div
                                   key={entry.id}
-                                  className="inline-flex items-center gap-1 bg-white text-slate-600 text-[11px] font-semibold px-2 py-1 rounded-full"
+                                  className="flex items-center gap-1.5 bg-white text-slate-600 text-[11px] font-semibold px-2 py-1 rounded-lg"
                                 >
-                                  {subject?.icon} {subject?.name ?? '—'}
-                                </span>
+                                  <span className="text-slate-400 w-3 shrink-0">{i + 1}.</span>
+                                  <span className="shrink-0">{subject?.icon}</span>
+                                  <span className="truncate">{subject?.name ?? '—'}</span>
+                                </div>
                               )
                             })}
                           </div>
