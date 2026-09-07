@@ -22,25 +22,48 @@ export default function Timetable({ studentId, subjects, assignments, timetable,
   const myEntries = timetable.filter((t) => t.studentId === studentId)
   const today = todayDayOfWeek()
 
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [subjectId, setSubjectId] = useState(mySubjects[0]?.id ?? '')
   const [dayOfWeek, setDayOfWeek] = useState(1)
   const [startTime, setStartTime] = useState('08:00')
 
-  function addEntry(e: React.FormEvent) {
+  function resetForm() {
+    setEditingId(null)
+    setSubjectId(mySubjects[0]?.id ?? '')
+    setDayOfWeek(1)
+    setStartTime('08:00')
+  }
+
+  function startEdit(entry: TimetableEntry) {
+    setEditingId(entry.id)
+    setSubjectId(entry.subjectId)
+    setDayOfWeek(entry.dayOfWeek)
+    setStartTime(entry.startTime)
+  }
+
+  function submitEntry(e: React.FormEvent) {
     e.preventDefault()
     if (!subjectId) return
-    const entry: TimetableEntry = { id: uid(), studentId, subjectId, dayOfWeek, startTime }
-    onChange([...timetable, entry])
+    if (editingId) {
+      onChange(timetable.map((t) => (t.id === editingId ? { ...t, subjectId, dayOfWeek, startTime } : t)))
+    } else {
+      const entry: TimetableEntry = { id: uid(), studentId, subjectId, dayOfWeek, startTime }
+      onChange([...timetable, entry])
+    }
+    resetForm()
   }
 
   function removeEntry(id: string) {
     onChange(timetable.filter((t) => t.id !== id))
+    if (editingId === id) resetForm()
   }
 
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">
-        <h3 className="font-display text-lg font-bold text-slate-800 mb-1">Új óra hozzáadása 📐</h3>
+        <h3 className="font-display text-lg font-bold text-slate-800 mb-1">
+          {editingId ? 'Óra szerkesztése ✏️' : 'Új óra hozzáadása 📐'}
+        </h3>
         <p className="text-sm text-slate-400 mb-4">
           A már hozzárendelt tantárgyaid közül választhatsz a "Tantárgyaim" fülön beállítottak alapján.
         </p>
@@ -50,7 +73,7 @@ export default function Timetable({ studentId, subjects, assignments, timetable,
             Ehhez a tanulóhoz még nincs tantárgy hozzárendelve. Állítsd be a "Tantárgyaim" fülön!
           </p>
         ) : (
-          <form onSubmit={addEntry} className="space-y-3">
+          <form onSubmit={submitEntry} className="space-y-3">
             <select
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
@@ -91,12 +114,23 @@ export default function Timetable({ studentId, subjects, assignments, timetable,
               />
             </div>
 
-            <button
-              type="submit"
-              className="btn-pop w-full bg-grape text-white font-display font-bold text-lg py-3 rounded-2xl shadow-pop"
-            >
-              Hozzáadás 🎉
-            </button>
+            <div className="flex gap-2">
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="flex-1 py-3 rounded-2xl font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200"
+                >
+                  Mégse
+                </button>
+              )}
+              <button
+                type="submit"
+                className="btn-pop flex-1 bg-grape text-white font-display font-bold text-lg py-3 rounded-2xl shadow-pop"
+              >
+                {editingId ? 'Mentés 💾' : 'Hozzáadás 🎉'}
+              </button>
+            </div>
           </form>
         )}
       </div>
@@ -137,10 +171,15 @@ export default function Timetable({ studentId, subjects, assignments, timetable,
                     <div className="space-y-1.5">
                       {dayEntries.map((entry, i) => {
                         const subject = subjects.find((s) => s.id === entry.subjectId)
+                        const isEditing = editingId === entry.id
                         return (
-                          <div
+                          <button
+                            type="button"
                             key={entry.id}
-                            className="relative bg-slate-50 rounded-xl px-2 py-2 text-center group"
+                            onClick={() => startEdit(entry)}
+                            className={`relative w-full rounded-xl px-2 py-2 text-center group ${
+                              isEditing ? 'bg-grape/10 ring-2 ring-grape' : 'bg-slate-50'
+                            }`}
                           >
                             <span className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-grape text-white text-[10px] font-bold flex items-center justify-center">
                               {i + 1}
@@ -150,14 +189,17 @@ export default function Timetable({ studentId, subjects, assignments, timetable,
                               {subject?.name ?? '—'}
                             </div>
                             <div className="text-[10px] text-slate-400">{entry.startTime}</div>
-                            <button
-                              onClick={() => removeEntry(entry.id)}
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeEntry(entry.id)
+                              }}
                               className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border border-slate-200 text-slate-300 hover:text-bubblegum text-[10px] leading-none flex items-center justify-center"
                               title="Törlés"
                             >
                               ✕
-                            </button>
-                          </div>
+                            </span>
+                          </button>
                         )
                       })}
                     </div>
