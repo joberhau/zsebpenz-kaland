@@ -1,4 +1,4 @@
-import type { Activity, Assignment, Bonus, MonthlyGrade, StudentColor } from './types'
+import type { Activity, Assignment, Bonus, MonthlyGrade, StudentColor, TimetableEntry } from './types'
 
 export function formatHuf(amount: number): string {
   return new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 0 }).format(amount) + ' Ft'
@@ -156,6 +156,13 @@ export function todaysActivities(activities: Activity[], studentId: string): Act
   const today = todayDayOfWeek()
   return studentActivities(activities, studentId)
     .filter((a) => a.dayOfWeek === today)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+}
+
+export function todaysTimetable(timetable: TimetableEntry[], studentId: string): TimetableEntry[] {
+  const today = todayDayOfWeek()
+  return timetable
+    .filter((t) => t.studentId === studentId && t.dayOfWeek === today)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
 }
 

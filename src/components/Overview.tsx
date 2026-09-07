@@ -15,6 +15,7 @@ import {
   shiftMonth,
   studentMonthTotal,
   todaysActivities,
+  todaysTimetable,
 } from '../utils'
 import { Avatar } from './Avatars'
 import PushSettingsModal from './PushSettingsModal'
@@ -127,6 +128,7 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
               )
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
               const todayActivities = todaysActivities(data.activities, student.id)
+              const todayClassCount = todaysTimetable(data.timetable, student.id).length
               return (
                 <button
                   key={student.id}
@@ -172,7 +174,10 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                       </div>
                       <div className="min-w-0">
                         <div className="font-display text-lg font-bold text-slate-800 truncate">{student.name}</div>
-                        <div className="text-xs text-slate-400 font-semibold">{subjectCount} tantárgy</div>
+                        <div className="text-xs text-slate-400 font-semibold">
+                          {subjectCount} tantárgy
+                          {todayClassCount > 0 && ` · ma ${todayClassCount} óra 📐`}
+                        </div>
                       </div>
                     </div>
                     {todayActivities.length > 0 && (

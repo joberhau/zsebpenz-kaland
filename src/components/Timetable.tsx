@@ -135,13 +135,16 @@ export default function Timetable({ studentId, subjects, assignments, timetable,
                       {DAY_NAMES[d].slice(0, 3)}
                     </div>
                     <div className="space-y-1.5">
-                      {dayEntries.map((entry) => {
+                      {dayEntries.map((entry, i) => {
                         const subject = subjects.find((s) => s.id === entry.subjectId)
                         return (
                           <div
                             key={entry.id}
                             className="relative bg-slate-50 rounded-xl px-2 py-2 text-center group"
                           >
+                            <span className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-grape text-white text-[10px] font-bold flex items-center justify-center">
+                              {i + 1}
+                            </span>
                             <div className="text-xl leading-none mb-0.5">{subject?.icon ?? '📐'}</div>
                             <div className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
                               {subject?.name ?? '—'}

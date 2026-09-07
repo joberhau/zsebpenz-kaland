@@ -82,22 +82,23 @@ export function printTimetable(student: Student, subjects: Subject[], timetable:
   )
   const maxRows = Math.max(1, ...byDay.map((d) => d.length))
 
-  const bodyRows = Array.from({ length: maxRows }, (_, row) =>
-    byDay
+  const bodyRows = Array.from({ length: maxRows }, (_, row) => {
+    const cells = byDay
       .map((dayEntries) => {
         const item = dayEntries[row]
         if (!item) return '<td>&nbsp;</td>'
         return `<td>${item.subject?.icon ?? ''} ${item.subject?.name ?? '(törölt tantárgy)'}<br><span style="font-size:11px;color:#666">${item.entry.startTime}</span></td>`
       })
-      .join(''),
-  )
+      .join('')
+    return `<td style="font-weight:bold">${row + 1}.</td>${cells}`
+  })
 
   const body = `
     <h1>Zsebpénz Kaland</h1>
     <h2>${student.name} — órarend</h2>
     <table class="centered">
       <thead>
-        <tr>${SCHOOL_DAYS.map((d) => `<th>${SCHOOL_DAY_NAMES[d]}</th>`).join('')}</tr>
+        <tr><th>Óra</th>${SCHOOL_DAYS.map((d) => `<th>${SCHOOL_DAY_NAMES[d]}</th>`).join('')}</tr>
       </thead>
       <tbody>
         ${bodyRows.map((r) => `<tr>${r}</tr>`).join('')}
