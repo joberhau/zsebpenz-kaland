@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { AppData } from '../types'
 import {
+  DAY_NAMES,
+  SCHOOL_DAY_ORDER,
   STUDENT_COLORS,
   bonusMonthNegative,
   bonusMonthPositive,
@@ -14,6 +16,7 @@ import {
   monthsOfYear,
   shiftMonth,
   studentMonthTotal,
+  todayDayOfWeek,
   todaysActivities,
   todaysTimetable,
 } from '../utils'
@@ -37,9 +40,21 @@ function loadHeadlineOffset(): number {
 export default function Overview({ data, onSelectStudent, onLogout, onUpdateData }: OverviewProps) {
   const [headlineOffset, setHeadlineOffset] = useState(loadHeadlineOffset)
   const [showPushSettings, setShowPushSettings] = useState(false)
+  const [dayByStudent, setDayByStudent] = useState<Record<string, number>>({})
   const currentYear = new Date().getFullYear()
   const yearMonths = monthsOfYear(currentYear)
   const headlineMonth = shiftMonth(currentMonthKey(), headlineOffset)
+  const today = todayDayOfWeek()
+  const defaultDay = SCHOOL_DAY_ORDER.includes(today) ? today : SCHOOL_DAY_ORDER[0]
+
+  function shiftDay(studentId: string, delta: number) {
+    setDayByStudent((prev) => {
+      const current = prev[studentId] ?? defaultDay
+      const idx = SCHOOL_DAY_ORDER.indexOf(current)
+      const nextIdx = (idx + delta + SCHOOL_DAY_ORDER.length) % SCHOOL_DAY_ORDER.length
+      return { ...prev, [studentId]: SCHOOL_DAY_ORDER[nextIdx] }
+    })
+  }
 
   useEffect(() => {
     localStorage.setItem(HEADLINE_KEY, String(headlineOffset))
@@ -129,11 +144,21 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
               const todayActivities = todaysActivities(data.activities, student.id)
               const todayClassCount = todaysTimetable(data.timetable, student.id).length
+              const hasTimetable = data.timetable.some((t) => t.studentId === student.id)
+              const viewDay = dayByStudent[student.id] ?? defaultDay
+              const viewDayEntries = data.timetable
+                .filter((t) => t.studentId === student.id && t.dayOfWeek === viewDay)
+                .sort((a, b) => a.startTime.localeCompare(b.startTime))
               return (
-                <button
+                <div
                   key={student.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onSelectStudent(student.id)}
-                  className={`text-left bg-white rounded-3xl border-4 ${c.border} p-4 shadow-pop btn-pop flex gap-3`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') onSelectStudent(student.id)
+                  }}
+                  className={`text-left bg-white rounded-3xl border-4 ${c.border} p-4 shadow-pop btn-pop flex gap-3 cursor-pointer`}
                 >
                   {/* Left-edge yearly timeline */}
                   <div className="relative shrink-0 w-[4.75rem] pl-3 py-1">
@@ -192,6 +217,53 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                         ))}
                       </div>
                     )}
+                    {hasTimetable && (
+                      <div className="rounded-2xl bg-slate-50 px-3 py-2 mb-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              shiftDay(student.id, -1)
+                            }}
+                            className="text-slate-400 hover:text-slate-600 px-1.5 text-sm font-bold"
+                          >
+                            ◀
+                          </button>
+                          <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                            {DAY_NAMES[viewDay]}
+                            {viewDay === today && ' · ma'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              shiftDay(student.id, 1)
+                            }}
+                            className="text-slate-400 hover:text-slate-600 px-1.5 text-sm font-bold"
+                          >
+                            ▶
+                          </button>
+                        </div>
+                        {viewDayEntries.length === 0 ? (
+                          <p className="text-center text-[11px] text-slate-400 py-1">Nincs óra</p>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {viewDayEntries.map((entry) => {
+                              const subject = data.subjects.find((s) => s.id === entry.subjectId)
+                              return (
+                                <span
+                                  key={entry.id}
+                                  className="inline-flex items-center gap-1 bg-white text-slate-600 text-[11px] font-semibold px-2 py-1 rounded-full"
+                                >
+                                  {subject?.icon} {subject?.name ?? '—'}
+                                </span>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {baseAllowance > 0 || bonus !== 0 ? (
                       <div className={`rounded-2xl ${c.bg} px-4 py-3 space-y-1`}>
                         <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
@@ -230,7 +302,7 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                       </div>
                     )}
                   </div>
-                </button>
+                </div>
               )
             })}
           </div>
