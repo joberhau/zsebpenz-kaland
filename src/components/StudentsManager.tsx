@@ -23,7 +23,7 @@ export default function StudentsManager({
 
   return (
     <div>
-      <header className="bg-white border-b-4 border-lemon px-5 py-4 sticky top-0 z-10 flex items-center justify-between">
+      <header className="bg-white border-b-4 border-lemon px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] sticky top-0 z-10 flex items-center justify-between">
         <h1 className="font-display text-xl font-extrabold text-slate-800">Tanulók 🧒</h1>
         <button
           onClick={() => setModal('add')}

@@ -43,7 +43,7 @@ export default function SubjectsManager({ subjects, onCreate, onRename, onIconCh
 
   return (
     <div>
-      <header className="bg-white border-b-4 border-lemon px-5 py-4 sticky top-0 z-10">
+      <header className="bg-white border-b-4 border-lemon px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] sticky top-0 z-10">
         <h1 className="font-display text-xl font-extrabold text-slate-800">Tantárgyak 📚</h1>
       </header>
 

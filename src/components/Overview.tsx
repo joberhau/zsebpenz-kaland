@@ -46,7 +46,7 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
 
   return (
     <div>
-      <header className="bg-white border-b-4 border-lemon px-5 py-4 flex items-center justify-between sticky top-0 z-10">
+      <header className="bg-white border-b-4 border-lemon px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <span className="text-3xl">🦄💰</span>
           <h1 className="font-display text-lg sm:text-2xl font-extrabold text-grape">Zsebpénz Kaland</h1>

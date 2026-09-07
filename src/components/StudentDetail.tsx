@@ -45,7 +45,7 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
 
   return (
     <div>
-      <header className={`px-5 py-4 sticky top-0 z-10 bg-white border-b-4 ${colors.border}`}>
+      <header className={`px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] sticky top-0 z-10 bg-white border-b-4 ${colors.border}`}>
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <button
