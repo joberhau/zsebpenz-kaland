@@ -1,4 +1,4 @@
-import type { Assignment, Student, Subject, TimetableEntry } from './types'
+import type { Activity, Assignment, Student, Subject, TimetableEntry } from './types'
 import { formatHuf } from './utils'
 
 const PAGE_STYLE = `
@@ -87,7 +87,7 @@ export function printTimetable(student: Student, subjects: Subject[], timetable:
       .map((dayEntries) => {
         const item = dayEntries[row]
         if (!item) return '<td>&nbsp;</td>'
-        return `<td>${item.subject?.name ?? '(törölt tantárgy)'}<br><span style="font-size:11px;color:#666">${item.entry.startTime}</span></td>`
+        return `<td>${item.subject?.icon ?? ''} ${item.subject?.name ?? '(törölt tantárgy)'}<br><span style="font-size:11px;color:#666">${item.entry.startTime}</span></td>`
       })
       .join(''),
   )
@@ -106,4 +106,49 @@ export function printTimetable(student: Student, subjects: Subject[], timetable:
     <p class="meta">Nyomtatva: ${new Date().toLocaleDateString('hu-HU')}</p>
   `
   openPrintWindow(`${student.name} — órarend`, body)
+}
+
+const WEEK_DAYS = [1, 2, 3, 4, 5, 6, 0]
+const WEEK_DAY_NAMES: Record<number, string> = {
+  1: 'Hétfő',
+  2: 'Kedd',
+  3: 'Szerda',
+  4: 'Csütörtök',
+  5: 'Péntek',
+  6: 'Szombat',
+  0: 'Vasárnap',
+}
+
+export function printActivities(student: Student, activities: Activity[]) {
+  const byDay = WEEK_DAYS.map((d) =>
+    activities
+      .filter((a) => a.studentId === student.id && a.dayOfWeek === d)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime)),
+  )
+  const maxRows = Math.max(1, ...byDay.map((d) => d.length))
+
+  const bodyRows = Array.from({ length: maxRows }, (_, row) =>
+    byDay
+      .map((dayEntries) => {
+        const item = dayEntries[row]
+        if (!item) return '<td>&nbsp;</td>'
+        return `<td>${item.icon ?? ''} ${item.name}<br><span style="font-size:11px;color:#666">${item.startTime}–${item.endTime}</span></td>`
+      })
+      .join(''),
+  )
+
+  const body = `
+    <h1>Zsebpénz Kaland</h1>
+    <h2>${student.name} — heti rend (események)</h2>
+    <table class="centered">
+      <thead>
+        <tr>${WEEK_DAYS.map((d) => `<th>${WEEK_DAY_NAMES[d]}</th>`).join('')}</tr>
+      </thead>
+      <tbody>
+        ${bodyRows.map((r) => `<tr>${r}</tr>`).join('')}
+      </tbody>
+    </table>
+    <p class="meta">Nyomtatva: ${new Date().toLocaleDateString('hu-HU')}</p>
+  `
+  openPrintWindow(`${student.name} — heti rend`, body)
 }

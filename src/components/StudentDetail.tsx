@@ -10,7 +10,7 @@ import {
   gradeBasedTotal,
   studentMonthTotal,
 } from '../utils'
-import { printSubjectTable, printTimetable } from '../print'
+import { printActivities, printSubjectTable, printTimetable } from '../print'
 import { Avatar } from './Avatars'
 import AssignmentsEditor from './AssignmentsEditor'
 import MonthlyGrades from './MonthlyGrades'
@@ -173,6 +173,7 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
             studentId={studentId}
             activities={data.activities}
             onChange={(activities) => onUpdateData({ activities })}
+            onPrint={() => printActivities(student, data.activities)}
           />
         )}
         {tab === 'timetable' && (

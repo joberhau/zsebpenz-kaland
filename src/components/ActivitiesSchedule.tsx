@@ -7,37 +7,68 @@ interface ActivitiesScheduleProps {
   studentId: string
   activities: Activity[]
   onChange: (activities: Activity[]) => void
+  onPrint: () => void
 }
 
-export default function ActivitiesSchedule({ studentId, activities, onChange }: ActivitiesScheduleProps) {
+export default function ActivitiesSchedule({ studentId, activities, onChange, onPrint }: ActivitiesScheduleProps) {
   const mine = studentActivities(activities, studentId)
   const today = todayDayOfWeek()
 
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [icon, setIcon] = useState(ACTIVITY_ICONS[0])
   const [dayOfWeek, setDayOfWeek] = useState(1)
   const [startTime, setStartTime] = useState('16:00')
   const [endTime, setEndTime] = useState('17:00')
 
-  function addActivity(e: React.FormEvent) {
+  function resetForm() {
+    setEditingId(null)
+    setName('')
+    setIcon(ACTIVITY_ICONS[0])
+    setDayOfWeek(1)
+    setStartTime('16:00')
+    setEndTime('17:00')
+  }
+
+  function startEdit(activity: Activity) {
+    setEditingId(activity.id)
+    setName(activity.name)
+    setIcon(activity.icon)
+    setDayOfWeek(activity.dayOfWeek)
+    setStartTime(activity.startTime)
+    setEndTime(activity.endTime)
+  }
+
+  function submitActivity(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
-    const activity: Activity = { id: uid(), studentId, name: name.trim(), icon, dayOfWeek, startTime, endTime }
-    onChange([...activities, activity])
-    setName('')
+    if (editingId) {
+      onChange(
+        activities.map((a) =>
+          a.id === editingId ? { ...a, name: name.trim(), icon, dayOfWeek, startTime, endTime } : a,
+        ),
+      )
+    } else {
+      const activity: Activity = { id: uid(), studentId, name: name.trim(), icon, dayOfWeek, startTime, endTime }
+      onChange([...activities, activity])
+    }
+    resetForm()
   }
 
   function removeActivity(id: string) {
     onChange(activities.filter((a) => a.id !== id))
+    if (editingId === id) resetForm()
   }
 
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">
-        <h3 className="font-display text-lg font-bold text-slate-800 mb-1">Új esemény 📅</h3>
+        <h3 className="font-display text-lg font-bold text-slate-800 mb-1">
+          {editingId ? 'Esemény szerkesztése ✏️' : 'Új esemény 📅'}
+        </h3>
         <p className="text-sm text-slate-400 mb-4">Heti rendszerességgel ismétlődik ugyanazon a napon.</p>
 
-        <form onSubmit={addActivity} className="space-y-3">
+        <form onSubmit={submitActivity} className="space-y-3">
           <div className="flex gap-2">
             <div className="flex flex-wrap gap-1.5 bg-slate-50 rounded-2xl p-2 flex-1">
               {ACTIVITY_ICONS.map((i) => (
@@ -101,18 +132,40 @@ export default function ActivitiesSchedule({ studentId, activities, onChange }: 
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={!name.trim()}
-            className="btn-pop w-full bg-grape text-white font-display font-bold text-lg py-3 rounded-2xl shadow-pop disabled:opacity-40"
-          >
-            Hozzáadás 🎉
-          </button>
+          <div className="flex gap-2">
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="flex-1 py-3 rounded-2xl font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200"
+              >
+                Mégse
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={!name.trim()}
+              className="btn-pop flex-1 bg-grape text-white font-display font-bold text-lg py-3 rounded-2xl shadow-pop disabled:opacity-40"
+            >
+              {editingId ? 'Mentés 💾' : 'Hozzáadás 🎉'}
+            </button>
+          </div>
         </form>
       </div>
 
       <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">
-        <h3 className="font-display text-lg font-bold text-slate-800 mb-4">Heti rend 📅</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display text-lg font-bold text-slate-800">Heti rend 📅</h3>
+          {mine.length > 0 && (
+            <button
+              onClick={onPrint}
+              className="text-sm font-semibold text-slate-400 hover:text-grape"
+              title="Heti rend nyomtatása"
+            >
+              🖨️ Nyomtatás
+            </button>
+          )}
+        </div>
 
         {mine.length === 0 ? (
           <p className="text-center text-slate-400 py-4">Még nincs felvéve edzés/foglalkozás.</p>
@@ -132,15 +185,29 @@ export default function ActivitiesSchedule({ studentId, activities, onChange }: 
                     {dayActivities.map((activity) => (
                       <li
                         key={activity.id}
-                        className="flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-3"
+                        className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${
+                          editingId === activity.id ? 'bg-grape/10 ring-2 ring-grape' : 'bg-slate-50'
+                        }`}
                       >
-                        <span className="text-2xl shrink-0">{activity.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-slate-700 truncate">{activity.name}</div>
-                          <div className="text-xs text-slate-400">
-                            {activity.startTime}–{activity.endTime}
+                        <button
+                          onClick={() => startEdit(activity)}
+                          className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                        >
+                          <span className="text-2xl shrink-0">{activity.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-slate-700 truncate">{activity.name}</div>
+                            <div className="text-xs text-slate-400">
+                              {activity.startTime}–{activity.endTime}
+                            </div>
                           </div>
-                        </div>
+                        </button>
+                        <button
+                          onClick={() => startEdit(activity)}
+                          className="text-slate-400 hover:text-grape px-1 shrink-0"
+                          title="Szerkesztés"
+                        >
+                          ✏️
+                        </button>
                         <button
                           onClick={() => removeActivity(activity.id)}
                           className="text-slate-300 hover:text-bubblegum font-bold px-1 shrink-0"
