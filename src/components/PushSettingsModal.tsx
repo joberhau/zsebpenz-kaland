@@ -21,12 +21,14 @@ export default function PushSettingsModal({
   onClose,
 }: PushSettingsModalProps) {
   const [status, setStatus] = useState<PushStatus>(getPushStatus)
+  const [errorMessage, setErrorMessage] = useState<string | undefined>()
   const [busy, setBusy] = useState(false)
 
   async function handleEnable() {
     setBusy(true)
     const result = await enablePush()
-    setStatus(result)
+    setStatus(result.status)
+    setErrorMessage(result.errorMessage)
     setBusy(false)
   }
 
@@ -58,6 +60,7 @@ export default function PushSettingsModal({
             {status === 'timeout'
               ? 'Túl sokáig tartott a bekapcsolás (lassú kapcsolat?) — próbáld újra.'
               : 'Hiba történt bekapcsolás közben — próbáld újra.'}
+            {errorMessage && <span className="block mt-1 font-mono text-xs opacity-75">{errorMessage}</span>}
           </p>
         )}
         {(status === 'default' || status === 'timeout' || status === 'error') && (

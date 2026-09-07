@@ -29,12 +29,17 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   })
 }
 
+export interface EnablePushResult {
+  status: PushStatus
+  errorMessage?: string
+}
+
 /** Requests notification permission, registers the service worker, gets an FCM token and saves it. */
-export async function enablePush(): Promise<PushStatus> {
-  if (getPushStatus() === 'unsupported') return 'unsupported'
+export async function enablePush(): Promise<EnablePushResult> {
+  if (getPushStatus() === 'unsupported') return { status: 'unsupported' }
 
   const permission = await Notification.requestPermission()
-  if (permission !== 'granted') return permission
+  if (permission !== 'granted') return { status: permission }
 
   try {
     const [{ getMessaging, getToken }, registration] = await withTimeout(
@@ -49,10 +54,12 @@ export async function enablePush(): Promise<PushStatus> {
     if (token) {
       await withTimeout(setDoc(doc(db, 'pushTokens', token), { token, createdAt: serverTimestamp() }), 10000)
     }
-    return 'granted'
+    return { status: 'granted' }
   } catch (err) {
     console.error('Push enable failed:', err)
-    if (err instanceof Error && err.message === 'timeout') return 'timeout'
-    return 'error'
+    if (err instanceof Error && err.message === 'timeout') return { status: 'timeout' }
+    const errorMessage =
+      err instanceof Error ? `${err.name}: ${err.message}` : typeof err === 'string' ? err : 'Ismeretlen hiba'
+    return { status: 'error', errorMessage }
   }
 }
