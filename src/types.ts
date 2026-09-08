@@ -76,6 +76,15 @@ export interface Bonus {
   amount: number
 }
 
+/** A homework item synced in from KRÉTA for a given lesson date. Read-only in the app. */
+export interface Homework {
+  id: string
+  studentId: string
+  subject: string
+  date: string // "yyyy-mm-dd" — the lesson date the homework was assigned on
+  text: string
+}
+
 export interface AppData {
   subjects: Subject[]
   students: Student[]
@@ -85,6 +94,7 @@ export interface AppData {
   timetable: TimetableEntry[]
   absences: Absence[]
   bonuses: Bonus[]
+  homework: Homework[]
   /** Minutes before an activity's start time to send a push reminder (0 = at start time). */
   notificationLeadMinutes: number
 }

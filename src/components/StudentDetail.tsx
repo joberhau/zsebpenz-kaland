@@ -18,6 +18,7 @@ import ActivitiesSchedule from './ActivitiesSchedule'
 import Timetable from './Timetable'
 import AbsenceLog from './AbsenceLog'
 import BonusLog from './BonusLog'
+import HomeworkList from './HomeworkList'
 
 interface StudentDetailProps {
   studentId: string
@@ -27,7 +28,7 @@ interface StudentDetailProps {
   onDeleteStudent: () => void
 }
 
-type Tab = 'grades' | 'subjects' | 'activities' | 'timetable' | 'absences' | 'bonus'
+type Tab = 'grades' | 'subjects' | 'activities' | 'timetable' | 'homework' | 'absences' | 'bonus'
 
 export default function StudentDetail({ studentId, data, onBack, onUpdateData, onDeleteStudent }: StudentDetailProps) {
   const [tab, setTab] = useState<Tab>('grades')
@@ -131,6 +132,14 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
             Órarend 📐
           </button>
           <button
+            onClick={() => setTab('homework')}
+            className={`px-5 py-2.5 rounded-xl font-display font-bold transition-colors shrink-0 ${
+              tab === 'homework' ? `${colors.solid} text-white` : 'text-slate-500'
+            }`}
+          >
+            Házi 📓
+          </button>
+          <button
             onClick={() => setTab('absences')}
             className={`px-5 py-2.5 rounded-xl font-display font-bold transition-colors shrink-0 ${
               tab === 'absences' ? `${colors.solid} text-white` : 'text-slate-500'
@@ -186,6 +195,7 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
             onPrint={() => printTimetable(student, data.subjects, data.timetable)}
           />
         )}
+        {tab === 'homework' && <HomeworkList studentId={studentId} homework={data.homework} />}
         {tab === 'absences' && (
           <AbsenceLog
             studentId={studentId}

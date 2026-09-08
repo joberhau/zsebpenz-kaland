@@ -21,6 +21,7 @@ const EMPTY_DATA: AppData = {
   timetable: [],
   absences: [],
   bonuses: [],
+  homework: [],
   notificationLeadMinutes: 60,
 }
 

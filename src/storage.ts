@@ -35,6 +35,7 @@ function seedData(): AppData {
     timetable: [],
     absences: [],
     bonuses: [],
+    homework: [],
     notificationLeadMinutes: 60,
   }
 }
@@ -49,6 +50,7 @@ function emptyData(): AppData {
     timetable: [],
     absences: [],
     bonuses: [],
+    homework: [],
     notificationLeadMinutes: 60,
   }
 }
@@ -69,6 +71,7 @@ export function subscribeData(callback: (data: AppData) => void): () => void {
         timetable: raw.timetable ?? [],
         absences: raw.absences ?? [],
         bonuses: raw.bonuses ?? [],
+        homework: raw.homework ?? [],
         notificationLeadMinutes: raw.notificationLeadMinutes ?? 60,
       })
     } else {

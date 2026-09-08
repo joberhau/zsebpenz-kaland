@@ -1,0 +1,18 @@
+name: Test KRÉTA login and timetable (one-off, no Firestore writes)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/test-kreta.mjs
+        env:
+          KRETA_INSTITUTE_CODE: ${{ secrets.KRETA_INSTITUTE_CODE }}
+          KRETA_USERNAME: ${{ secrets.KRETA_USERNAME }}
+          KRETA_PASSWORD: ${{ secrets.KRETA_PASSWORD }}
