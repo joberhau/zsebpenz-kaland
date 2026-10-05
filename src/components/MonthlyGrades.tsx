@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { Assignment, Bonus, Grade, MonthlyGrade, StudentColor, Subject } from '../types'
+import type { Assignment, Bonus, Grade, MonthlyGrade, Payout, StudentColor, Subject } from '../types'
 import { uid } from '../storage'
 import { playApplause, playBombSound, playGameOverJingle, playGradeSound } from '../sound'
 import { celebrateGrade } from '../celebrate'
@@ -15,9 +15,11 @@ import {
   formatMonthLabel,
   formatMonthShort,
   gradeForAssignment,
+  isMonthPaid,
   monthsOfYear,
   shiftMonth,
   studentMonthTotal,
+  togglePayout,
 } from '../utils'
 
 interface MonthlyGradesProps {
@@ -28,7 +30,9 @@ interface MonthlyGradesProps {
   subjects: Subject[]
   assignments: Assignment[]
   monthlyGrades: MonthlyGrade[]
+  payouts: Payout[]
   onChange: (monthlyGrades: MonthlyGrade[]) => void
+  onChangePayouts: (payouts: Payout[]) => void
 }
 
 const GRADES: Grade[] = [1, 2, 3, 4, 5]
@@ -41,7 +45,9 @@ export default function MonthlyGrades({
   subjects,
   assignments,
   monthlyGrades,
+  payouts,
   onChange,
+  onChangePayouts,
 }: MonthlyGradesProps) {
   const studentAssignments = assignments.filter((a) => a.studentId === studentId)
   const currentYear = new Date().getFullYear()
@@ -52,6 +58,7 @@ export default function MonthlyGrades({
   const bonusPositive = bonusMonthPositive(bonuses, studentId, selectedMonth)
   const bonusNegative = bonusMonthNegative(bonuses, studentId, selectedMonth)
   const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth, baseAllowance, bonuses)
+  const paid = isMonthPaid(payouts, studentId, selectedMonth)
 
   function setGrade(assignmentId: string, grade: Grade) {
     const existing = gradeForAssignment(monthlyGrades, assignmentId, selectedMonth)
@@ -179,6 +186,14 @@ export default function MonthlyGrades({
             {bonusNegative > 0 && <div className="text-bubblegum">Levonás: -{formatHuf(bonusNegative)}</div>}
           </div>
         )}
+        <button
+          onClick={() => onChangePayouts(togglePayout(payouts, studentId, selectedMonth))}
+          className={`mt-3 w-full py-2.5 rounded-xl font-display font-bold btn-pop ${
+            paid ? 'bg-mint text-white' : 'bg-white/70 text-slate-500'
+          }`}
+        >
+          {paid ? '✅ Kifizetve' : '⏳ Kifizetés jelölése'}
+        </button>
       </div>
 
       <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">

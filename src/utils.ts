@@ -1,4 +1,5 @@
-import type { Activity, Assignment, Bonus, MonthlyGrade, StudentColor, TimetableEntry } from './types'
+import type { Activity, Assignment, Bonus, MonthlyGrade, Payout, StudentColor, TimetableEntry } from './types'
+import { uid } from './storage'
 
 export function formatHuf(amount: number): string {
   return new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 0 }).format(amount) + ' Ft'
@@ -96,6 +97,44 @@ export function studentMonthTotal(
     gradeBasedTotal(assignments, monthlyGrades, studentId, month) +
     bonusMonthTotal(bonuses, studentId, month)
   )
+}
+
+export function isMonthPaid(payouts: Payout[], studentId: string, month: string): boolean {
+  return payouts.some((p) => p.studentId === studentId && p.month === month)
+}
+
+/** Adds or removes a payout entry for the given student+month, marking it as paid/unpaid. */
+export function togglePayout(payouts: Payout[], studentId: string, month: string): Payout[] {
+  if (isMonthPaid(payouts, studentId, month)) {
+    return payouts.filter((p) => !(p.studentId === studentId && p.month === month))
+  }
+  return [...payouts, { id: uid(), studentId, month, paidAt: new Date().toISOString().slice(0, 10) }]
+}
+
+/** Marks every not-yet-paid month up to and including `uptoMonth` as paid — "emptying" the piggy bank. */
+export function emptyPiggyBank(payouts: Payout[], studentId: string, uptoMonth: string): Payout[] {
+  const year = Number(uptoMonth.slice(0, 4))
+  const paidAt = new Date().toISOString().slice(0, 10)
+  const newEntries: Payout[] = monthsOfYear(year)
+    .filter((m) => m <= uptoMonth && !isMonthPaid(payouts, studentId, m))
+    .map((m) => ({ id: uid(), studentId, month: m, paidAt }))
+  return [...payouts, ...newEntries]
+}
+
+/** Sum of a student's monthly totals, up to `uptoMonth`, that haven't been paid out yet — the running "malacpersely" balance. */
+export function piggyBankBalance(
+  assignments: Assignment[],
+  monthlyGrades: MonthlyGrade[],
+  bonuses: Bonus[],
+  payouts: Payout[],
+  studentId: string,
+  baseAllowance: number,
+  uptoMonth: string = currentMonthKey(),
+): number {
+  const year = Number(uptoMonth.slice(0, 4))
+  return monthsOfYear(year)
+    .filter((m) => m <= uptoMonth && !isMonthPaid(payouts, studentId, m))
+    .reduce((sum, m) => sum + studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance, bonuses), 0)
 }
 
 export function monthsWithData(monthlyGrades: MonthlyGrade[], assignmentIds: string[]): string[] {

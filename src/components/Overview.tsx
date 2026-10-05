@@ -8,17 +8,21 @@ import {
   bonusMonthPositive,
   bonusMonthTotal,
   currentMonthKey,
+  emptyPiggyBank,
   formatHuf,
   formatHufCompact,
   formatMonthLabel,
   formatMonthShort,
   gradeBasedTotal,
+  isMonthPaid,
   monthsOfYear,
+  piggyBankBalance,
   shiftMonth,
   studentMonthTotal,
   todayDayOfWeek,
   todaysActivities,
   todaysTimetable,
+  togglePayout,
 } from '../utils'
 import { Avatar } from './Avatars'
 import PushSettingsModal from './PushSettingsModal'
@@ -141,6 +145,18 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                 baseAllowance,
                 data.bonuses,
               )
+              const paid = isMonthPaid(data.payouts, student.id, headlineMonth)
+              const piggy = student.savingsMode
+                ? piggyBankBalance(
+                    data.assignments,
+                    data.monthlyGrades,
+                    data.bonuses,
+                    data.payouts,
+                    student.id,
+                    baseAllowance,
+                    headlineMonth,
+                  )
+                : 0
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
               const todayActivities = todaysActivities(data.activities, student.id)
               const todayClassCount = todaysTimetable(data.timetable, student.id).length
@@ -302,6 +318,39 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                         </span>
                         <span className={`font-display text-xl font-extrabold ${c.text}`}>{formatHuf(total)}</span>
                       </div>
+                    )}
+
+                    {student.savingsMode ? (
+                      <div className="rounded-2xl bg-lemon/30 px-4 py-3 mt-2 flex items-center justify-between gap-2">
+                        <span className="text-sm font-bold text-slate-600 shrink-0">🐷 Perselyben</span>
+                        <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(piggy)}</span>
+                        {piggy > 0 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onUpdateData({ payouts: emptyPiggyBank(data.payouts, student.id, headlineMonth) })
+                            }}
+                            className="shrink-0 text-xs font-bold text-slate-500 bg-white px-2.5 py-1.5 rounded-full hover:text-grape"
+                            title="Perselyben gyűlt összeg kifizetése"
+                          >
+                            Kiürítés
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUpdateData({ payouts: togglePayout(data.payouts, student.id, headlineMonth) })
+                        }}
+                        className={`mt-2 text-xs font-bold px-2.5 py-1.5 rounded-full ${
+                          paid ? 'bg-mint text-white' : 'bg-slate-100 text-slate-500'
+                        }`}
+                      >
+                        {paid ? '✅ Kifizetve' : '⏳ Fizetésre vár'}
+                      </button>
                     )}
                   </div>
                 </div>

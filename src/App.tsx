@@ -22,6 +22,7 @@ const EMPTY_DATA: AppData = {
   absences: [],
   bonuses: [],
   homework: [],
+  payouts: [],
   notificationLeadMinutes: 60,
 }
 
@@ -91,14 +92,29 @@ export default function App() {
     })
   }
 
-  function addStudent(name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) {
-    const student: Student = { id: uid(), name, avatar, color, baseAllowance }
+  function addStudent(
+    name: string,
+    avatar: AvatarId,
+    color: StudentColor,
+    baseAllowance: number,
+    savingsMode: boolean,
+  ) {
+    const student: Student = { id: uid(), name, avatar, color, baseAllowance, savingsMode }
     updateData({ students: [...data.students, student] })
   }
 
-  function updateStudent(id: string, name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) {
+  function updateStudent(
+    id: string,
+    name: string,
+    avatar: AvatarId,
+    color: StudentColor,
+    baseAllowance: number,
+    savingsMode: boolean,
+  ) {
     updateData({
-      students: data.students.map((s) => (s.id === id ? { ...s, name, avatar, color, baseAllowance } : s)),
+      students: data.students.map((s) =>
+        s.id === id ? { ...s, name, avatar, color, baseAllowance, savingsMode } : s,
+      ),
     })
   }
 
@@ -114,6 +130,7 @@ export default function App() {
       timetable: data.timetable.filter((t) => t.studentId !== id),
       absences: data.absences.filter((a) => a.studentId !== id),
       bonuses: data.bonuses.filter((b) => b.studentId !== id),
+      payouts: data.payouts.filter((p) => p.studentId !== id),
     })
     setSelectedStudentId(null)
   }

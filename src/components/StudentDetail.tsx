@@ -8,6 +8,8 @@ import {
   currentMonthKey,
   formatHuf,
   gradeBasedTotal,
+  isMonthPaid,
+  piggyBankBalance,
   studentMonthTotal,
 } from '../utils'
 import { printActivities, printSubjectTable, printTimetable } from '../print'
@@ -43,6 +45,10 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
   const bonusPositive = bonusMonthPositive(data.bonuses, studentId, month)
   const bonusNegative = bonusMonthNegative(data.bonuses, studentId, month)
   const total = studentMonthTotal(data.assignments, data.monthlyGrades, studentId, month, baseAllowance, data.bonuses)
+  const paid = isMonthPaid(data.payouts, studentId, month)
+  const piggy = student.savingsMode
+    ? piggyBankBalance(data.assignments, data.monthlyGrades, data.bonuses, data.payouts, studentId, baseAllowance, month)
+    : 0
 
   return (
     <div>
@@ -95,6 +101,20 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
               {bonusPositive > 0 && <div className="text-mint">Bónusz: +{formatHuf(bonusPositive)}</div>}
               {bonusNegative > 0 && <div className="text-bubblegum">Levonás: -{formatHuf(bonusNegative)}</div>}
             </div>
+          )}
+          {student.savingsMode ? (
+            <div className="flex items-center justify-between pt-2 mt-2 border-t border-black/10">
+              <span className="text-sm font-bold text-slate-600">🐷 Malacperselyben</span>
+              <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(piggy)}</span>
+            </div>
+          ) : (
+            <span
+              className={`inline-block mt-2 text-xs font-bold px-2.5 py-1 rounded-full ${
+                paid ? 'bg-mint text-white' : 'bg-white/60 text-slate-500'
+              }`}
+            >
+              {paid ? '✅ Kifizetve' : '⏳ Fizetésre vár'}
+            </span>
           )}
         </div>
 
@@ -166,7 +186,9 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
             subjects={data.subjects}
             assignments={data.assignments}
             monthlyGrades={data.monthlyGrades}
+            payouts={data.payouts}
             onChange={(monthlyGrades) => onUpdateData({ monthlyGrades })}
+            onChangePayouts={(payouts) => onUpdateData({ payouts })}
           />
         )}
         {tab === 'subjects' && (

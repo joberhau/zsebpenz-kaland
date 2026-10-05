@@ -18,6 +18,8 @@ export interface Student {
   color: StudentColor
   /** Fixed monthly allowance (Ft), independent of grades — grade-based payout adds on top. */
   baseAllowance: number
+  /** If true, the monthly amount isn't handed over each month — it accumulates as shown "malacpersely" savings until paid out. */
+  savingsMode?: boolean
 }
 
 /** A subject assigned to a student, with its own grade -> Ft reward table. */
@@ -85,6 +87,14 @@ export interface Homework {
   text: string
 }
 
+/** Marks a given student's month as paid out (handed over in cash/transferred). Absence = not yet paid. */
+export interface Payout {
+  id: string
+  studentId: string
+  month: string // "yyyy-mm"
+  paidAt: string // "yyyy-mm-dd"
+}
+
 export interface AppData {
   subjects: Subject[]
   students: Student[]
@@ -95,6 +105,7 @@ export interface AppData {
   absences: Absence[]
   bonuses: Bonus[]
   homework: Homework[]
+  payouts: Payout[]
   /** Minutes before an activity's start time to send a push reminder (0 = at start time). */
   notificationLeadMinutes: number
 }
