@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Assignment, Bonus, Grade, MonthlyGrade, Payout, StudentColor, Subject } from '../types'
 import { uid } from '../storage'
 import { playApplause, playBombSound, playGameOverJingle, playGradeSound } from '../sound'
@@ -6,6 +6,7 @@ import { celebrateCoinDrop, celebrateGrade } from '../celebrate'
 import {
   GRADE_COLORS,
   STUDENT_COLORS,
+  addPayout,
   assignmentValue,
   bonusMonthNegative,
   bonusMonthPositive,
@@ -15,9 +16,11 @@ import {
   formatMonthLabel,
   formatMonthShort,
   gradeForAssignment,
-  monthPayoutKind,
+  monthKindTotal,
+  monthPayouts,
+  monthRemaining,
   monthsOfYear,
-  setPayoutKind,
+  removePayout,
   shiftMonth,
   studentMonthTotal,
 } from '../utils'
@@ -53,12 +56,23 @@ export default function MonthlyGrades({
   const currentYear = new Date().getFullYear()
   const yearMonths = useMemo(() => monthsOfYear(currentYear), [currentYear])
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey())
+  const [customAmount, setCustomAmount] = useState<string | null>(null)
+  useEffect(() => setCustomAmount(null), [selectedMonth])
   const colors = STUDENT_COLORS[color]
   const bonus = bonusMonthTotal(bonuses, studentId, selectedMonth)
   const bonusPositive = bonusMonthPositive(bonuses, studentId, selectedMonth)
   const bonusNegative = bonusMonthNegative(bonuses, studentId, selectedMonth)
   const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth, baseAllowance, bonuses)
-  const payoutKind = monthPayoutKind(payouts, studentId, selectedMonth)
+  const remaining = monthRemaining(assignments, monthlyGrades, bonuses, payouts, studentId, selectedMonth, baseAllowance)
+  const amount = Math.max(0, Math.min(remaining, Number(customAmount ?? remaining) || 0))
+  const entries = monthPayouts(payouts, studentId, selectedMonth)
+
+  function recordPayout(e: React.MouseEvent<HTMLButtonElement>, kind: 'paid' | 'piggy') {
+    if (amount <= 0) return
+    onChangePayouts(addPayout(payouts, studentId, selectedMonth, kind, amount))
+    celebrateCoinDrop(e.currentTarget, kind)
+    setCustomAmount(null)
+  }
 
   function setGrade(assignmentId: string, grade: Grade) {
     const existing = gradeForAssignment(monthlyGrades, assignmentId, selectedMonth)
@@ -186,30 +200,61 @@ export default function MonthlyGrades({
             {bonusNegative > 0 && <div className="text-bubblegum">Levonás: -{formatHuf(bonusNegative)}</div>}
           </div>
         )}
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={(e) => {
-              onChangePayouts(setPayoutKind(payouts, studentId, selectedMonth, 'paid'))
-              celebrateCoinDrop(e.currentTarget, 'paid')
-            }}
-            className={`flex-1 py-2.5 rounded-xl font-display font-bold btn-pop ${
-              payoutKind === 'paid' ? 'bg-mint text-white' : 'bg-white/70 text-slate-500'
-            }`}
-          >
-            💶 Kifizetem
-          </button>
-          <button
-            onClick={(e) => {
-              onChangePayouts(setPayoutKind(payouts, studentId, selectedMonth, 'piggy'))
-              celebrateCoinDrop(e.currentTarget, 'piggy')
-            }}
-            className={`flex-1 py-2.5 rounded-xl font-display font-bold btn-pop ${
-              payoutKind === 'piggy' ? 'bg-tangerine text-white' : 'bg-white/70 text-slate-500'
-            }`}
-          >
-            🐷 Malacba teszem
-          </button>
-        </div>
+        {entries.length > 0 && (
+          <ul className="mt-3 space-y-1.5">
+            {entries.map((p) => (
+              <li key={p.id} className="flex items-center justify-between bg-white/70 rounded-xl px-3 py-2">
+                <span className="text-sm font-semibold text-slate-600">
+                  {p.kind === 'paid' ? '✅ Kifizetve' : '🐷 Malacba'}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="font-display font-bold text-slate-700">{formatHuf(p.amount)}</span>
+                  <button
+                    onClick={() => onChangePayouts(removePayout(payouts, p.id))}
+                    className="text-slate-300 hover:text-bubblegum font-bold px-1"
+                    title="Visszavonás"
+                  >
+                    ✕
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {remaining > 0 ? (
+          <div className="mt-3">
+            <label className="text-xs font-semibold text-slate-500 ml-1">Mennyit osztunk szét?</label>
+            <input
+              type="number"
+              min={0}
+              max={remaining}
+              value={customAmount ?? remaining}
+              onChange={(e) => setCustomAmount(e.target.value)}
+              className="w-full mt-1 mb-2 px-4 py-2.5 rounded-xl border-2 border-white/70 bg-white/70 focus:border-slate-400 focus:outline-none font-display font-bold"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => recordPayout(e, 'paid')}
+                className="flex-1 py-2.5 rounded-xl font-display font-bold btn-pop bg-mint text-white disabled:opacity-40"
+                disabled={amount <= 0}
+              >
+                💶 Kifizetem
+              </button>
+              <button
+                onClick={(e) => recordPayout(e, 'piggy')}
+                className="flex-1 py-2.5 rounded-xl font-display font-bold btn-pop bg-tangerine text-white disabled:opacity-40"
+                disabled={amount <= 0}
+              >
+                🐷 Malacba teszem
+              </button>
+            </div>
+          </div>
+        ) : (
+          entries.length > 0 && (
+            <p className="text-xs font-semibold text-slate-400 mt-3 text-center">✅ Teljesen szétosztva</p>
+          )
+        )}
       </div>
 
       <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">
@@ -219,12 +264,14 @@ export default function MonthlyGrades({
           {yearMonths.map((m) => {
             const isSelected = m === selectedMonth
             const isCurrent = m === currentMonthKey()
-            const amount = studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance, bonuses)
+            const monthTotal = studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance, bonuses)
+            const monthPaid = monthKindTotal(payouts, studentId, m, 'paid')
+            const monthPiggy = monthKindTotal(payouts, studentId, m, 'piggy')
             return (
               <button
                 key={m}
                 onClick={() => setSelectedMonth(m)}
-                className="relative flex items-center justify-between w-full py-2 text-left"
+                className="relative flex items-center justify-between w-full py-2 text-left gap-2"
               >
                 <span
                   className={`absolute -left-6 w-3.5 h-3.5 rounded-full border-2 ${
@@ -235,8 +282,16 @@ export default function MonthlyGrades({
                   {formatMonthShort(m)}
                   {isCurrent && <span className="text-slate-400 font-normal"> · ma</span>}
                 </span>
-                <span className={`font-semibold ${amount > 0 ? 'text-slate-700' : 'text-slate-300'}`}>
-                  {formatHuf(amount)}
+                <span className="flex flex-col items-end">
+                  <span className={`font-semibold ${monthTotal > 0 ? 'text-slate-700' : 'text-slate-300'}`}>
+                    {formatHuf(monthTotal)}
+                  </span>
+                  {(monthPaid > 0 || monthPiggy > 0) && (
+                    <span className="flex gap-1.5 text-[10px] font-bold">
+                      {monthPaid > 0 && <span className="text-mint">✅ {formatHuf(monthPaid)}</span>}
+                      {monthPiggy > 0 && <span className="text-tangerine">🐷 {formatHuf(monthPiggy)}</span>}
+                    </span>
+                  )}
                 </span>
               </button>
             )

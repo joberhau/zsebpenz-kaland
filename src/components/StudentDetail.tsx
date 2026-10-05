@@ -8,7 +8,7 @@ import {
   currentMonthKey,
   formatHuf,
   gradeBasedTotal,
-  monthPayoutKind,
+  monthKindTotal,
   piggyBankBalance,
   studentMonthTotal,
 } from '../utils'
@@ -45,8 +45,9 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
   const bonusPositive = bonusMonthPositive(data.bonuses, studentId, month)
   const bonusNegative = bonusMonthNegative(data.bonuses, studentId, month)
   const total = studentMonthTotal(data.assignments, data.monthlyGrades, studentId, month, baseAllowance, data.bonuses)
-  const payoutKind = monthPayoutKind(data.payouts, studentId, month)
-  const piggy = piggyBankBalance(data.assignments, data.monthlyGrades, data.bonuses, data.payouts, studentId, baseAllowance, month)
+  const monthPaid = monthKindTotal(data.payouts, studentId, month, 'paid')
+  const monthPiggy = monthKindTotal(data.payouts, studentId, month, 'piggy')
+  const piggy = piggyBankBalance(data.payouts, studentId, month)
 
   return (
     <div>
@@ -106,14 +107,19 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
               <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(piggy)}</span>
             </div>
           )}
-          {payoutKind && (
-            <span
-              className={`inline-block mt-2 text-xs font-bold px-2.5 py-1 rounded-full ${
-                payoutKind === 'paid' ? 'bg-mint text-white' : 'bg-tangerine text-white'
-              }`}
-            >
-              {payoutKind === 'paid' ? '✅ Kifizetve' : '🐷 Malacba téve'}
-            </span>
+          {(monthPaid > 0 || monthPiggy > 0) && (
+            <div className="flex gap-1.5 mt-2">
+              {monthPaid > 0 && (
+                <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-mint text-white">
+                  ✅ {formatHuf(monthPaid)} kifizetve
+                </span>
+              )}
+              {monthPiggy > 0 && (
+                <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-tangerine text-white">
+                  🐷 {formatHuf(monthPiggy)} malacba
+                </span>
+              )}
+            </div>
           )}
         </div>
 

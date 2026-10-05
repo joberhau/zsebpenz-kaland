@@ -87,12 +87,17 @@ export interface Homework {
 
 export type PayoutKind = 'paid' | 'piggy'
 
-/** Records what happened to a given student's month: handed over in cash ("paid") or routed into the malacpersely ("piggy"). Absence = not decided yet. */
+/**
+ * Records one payout decision for a slice of a student's month — handed over in cash ("paid") or
+ * routed into the malacpersely ("piggy"). A month's total can be split across several of these
+ * (e.g. half paid, half piggy); whatever isn't covered yet by any entry is still "not decided".
+ */
 export interface Payout {
   id: string
   studentId: string
   month: string // "yyyy-mm"
   kind: PayoutKind
+  amount: number // Ft covered by this entry
   paidAt: string // "yyyy-mm-dd" — when the decision was made
 }
 

@@ -4,6 +4,7 @@ import {
   DAY_NAMES,
   SCHOOL_DAY_ORDER,
   STUDENT_COLORS,
+  addPayout,
   bonusMonthNegative,
   bonusMonthPositive,
   bonusMonthTotal,
@@ -14,10 +15,10 @@ import {
   formatMonthLabel,
   formatMonthShort,
   gradeBasedTotal,
-  monthPayoutKind,
+  monthKindTotal,
+  monthRemaining,
   monthsOfYear,
   piggyBankBalance,
-  setPayoutKind,
   shiftMonth,
   studentMonthTotal,
   todayDayOfWeek,
@@ -47,6 +48,7 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
   const [showPushSettings, setShowPushSettings] = useState(false)
   const [dayByStudent, setDayByStudent] = useState<Record<string, number>>({})
   const [bouncingPig, setBouncingPig] = useState<string | null>(null)
+  const [amountByStudent, setAmountByStudent] = useState<Record<string, string>>({})
   const currentYear = new Date().getFullYear()
   const yearMonths = monthsOfYear(currentYear)
   const headlineMonth = shiftMonth(currentMonthKey(), headlineOffset)
@@ -56,6 +58,14 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
   function bouncePig(studentId: string) {
     setBouncingPig(studentId)
     window.setTimeout(() => setBouncingPig((current) => (current === studentId ? null : current)), 500)
+  }
+
+  function clearAmountOverride(studentId: string) {
+    setAmountByStudent((prev) => {
+      const next = { ...prev }
+      delete next[studentId]
+      return next
+    })
   }
 
   function shiftDay(studentId: string, delta: number) {
@@ -70,6 +80,10 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
   useEffect(() => {
     localStorage.setItem(HEADLINE_KEY, String(headlineOffset))
   }, [headlineOffset])
+
+  useEffect(() => {
+    setAmountByStudent({})
+  }, [headlineMonth])
 
   return (
     <div>
@@ -152,16 +166,21 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                 baseAllowance,
                 data.bonuses,
               )
-              const payoutKind = monthPayoutKind(data.payouts, student.id, headlineMonth)
-              const piggy = piggyBankBalance(
+              const monthPaid = monthKindTotal(data.payouts, student.id, headlineMonth, 'paid')
+              const remaining = monthRemaining(
                 data.assignments,
                 data.monthlyGrades,
                 data.bonuses,
                 data.payouts,
                 student.id,
-                baseAllowance,
                 headlineMonth,
+                baseAllowance,
               )
+              const studentAmount = Math.max(
+                0,
+                Math.min(remaining, Number(amountByStudent[student.id] ?? remaining) || 0),
+              )
+              const piggy = piggyBankBalance(data.payouts, student.id, headlineMonth)
               const piggyScale = Math.min(1.6, 1 + piggy / 20000)
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
               const todayActivities = todaysActivities(data.activities, student.id)
@@ -195,6 +214,8 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                         baseAllowance,
                         data.bonuses,
                       )
+                      const mPaid = monthKindTotal(data.payouts, student.id, m, 'paid')
+                      const mPiggy = monthKindTotal(data.payouts, student.id, m, 'piggy')
                       return (
                         <div key={m} className="relative flex flex-col leading-tight py-[3px]">
                           <span
@@ -207,6 +228,8 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                           </span>
                           <span className={`text-[9px] font-semibold ${amount > 0 ? 'text-slate-600' : 'text-slate-300'}`}>
                             {amount > 0 ? formatHufCompact(amount) : '—'}
+                            {mPaid > 0 && ' ✅'}
+                            {mPiggy > 0 && ' 🐷'}
                           </span>
                         </div>
                       )
@@ -326,40 +349,54 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                       </div>
                     )}
 
-                    <div className="flex gap-1.5 mt-2">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onUpdateData({ payouts: setPayoutKind(data.payouts, student.id, headlineMonth, 'paid') })
-                          celebrateCoinDrop(e.currentTarget, 'paid')
-                        }}
-                        className={`flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full ${
-                          payoutKind === 'paid' ? 'bg-mint text-white' : 'bg-slate-100 text-slate-500'
-                        }`}
-                      >
-                        💶 Kifizetem
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onUpdateData({ payouts: setPayoutKind(data.payouts, student.id, headlineMonth, 'piggy') })
-                          celebrateCoinDrop(e.currentTarget, 'piggy')
-                          bouncePig(student.id)
-                        }}
-                        className={`flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full ${
-                          payoutKind === 'piggy' ? 'bg-tangerine text-white' : 'bg-slate-100 text-slate-500'
-                        }`}
-                      >
-                        🐷 Malacba
-                      </button>
-                    </div>
+                    {remaining > 0 && (
+                      <div className="flex items-center gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="number"
+                          min={0}
+                          max={remaining}
+                          value={amountByStudent[student.id] ?? remaining}
+                          onChange={(e) =>
+                            setAmountByStudent((prev) => ({ ...prev, [student.id]: e.target.value }))
+                          }
+                          className="w-20 shrink-0 text-xs font-bold px-2 py-1.5 rounded-full border-2 border-slate-200 focus:border-slate-400 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          disabled={studentAmount <= 0}
+                          onClick={(e) => {
+                            onUpdateData({
+                              payouts: addPayout(data.payouts, student.id, headlineMonth, 'paid', studentAmount),
+                            })
+                            celebrateCoinDrop(e.currentTarget, 'paid')
+                            clearAmountOverride(student.id)
+                          }}
+                          className="flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-500 disabled:opacity-40"
+                        >
+                          💶 Kifizetem
+                        </button>
+                        <button
+                          type="button"
+                          disabled={studentAmount <= 0}
+                          onClick={(e) => {
+                            onUpdateData({
+                              payouts: addPayout(data.payouts, student.id, headlineMonth, 'piggy', studentAmount),
+                            })
+                            celebrateCoinDrop(e.currentTarget, 'piggy')
+                            bouncePig(student.id)
+                            clearAmountOverride(student.id)
+                          }}
+                          className="flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-500 disabled:opacity-40"
+                        >
+                          🐷 Malacba
+                        </button>
+                      </div>
+                    )}
 
-                    {payoutKind === 'paid' && (
+                    {monthPaid > 0 && (
                       <div className="rounded-2xl bg-mint/20 px-4 py-3 mt-2 flex items-center justify-between gap-2">
                         <span className="text-sm font-bold text-slate-600">✅ Kifizetve</span>
-                        <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(total)}</span>
+                        <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(monthPaid)}</span>
                       </div>
                     )}
 

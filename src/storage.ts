@@ -74,8 +74,9 @@ export function subscribeData(callback: (data: AppData) => void): () => void {
         absences: raw.absences ?? [],
         bonuses: raw.bonuses ?? [],
         homework: raw.homework ?? [],
-        // Older entries predate the "paid vs. piggy" choice and only ever meant "paid".
-        payouts: (raw.payouts ?? []).map((p) => ({ ...p, kind: p.kind ?? 'paid' })),
+        // Older entries predate the "paid vs. piggy" choice (meant "paid") and/or the per-entry
+        // amount (covered the whole month) — normalize them so old data keeps displaying sanely.
+        payouts: (raw.payouts ?? []).map((p) => ({ ...p, kind: p.kind ?? 'paid', amount: p.amount ?? 0 })),
         notificationLeadMinutes: raw.notificationLeadMinutes ?? 60,
       })
     } else {

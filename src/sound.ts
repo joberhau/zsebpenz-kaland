@@ -225,38 +225,33 @@ export function playCoinClink(): void {
   }
 }
 
-/** Classic cash-register "cha-ching" — a quick swipe of noise followed by a ringing two-tone bell. */
+function bellStrike(ctx: AudioContext, time: number, freq: number, duration: number, gainPeak: number) {
+  const fundamental = ctx.createOscillator()
+  const overtone = ctx.createOscillator()
+  const gain = ctx.createGain()
+  fundamental.type = 'triangle'
+  fundamental.frequency.value = freq
+  overtone.type = 'triangle'
+  overtone.frequency.value = freq * 1.5 // a fifth above, for a metallic bell timbre
+  gain.gain.setValueAtTime(0, time)
+  gain.gain.linearRampToValueAtTime(gainPeak, time + 0.006)
+  gain.gain.exponentialRampToValueAtTime(0.001, time + duration)
+  fundamental.connect(gain)
+  overtone.connect(gain)
+  gain.connect(ctx.destination)
+  fundamental.start(time)
+  fundamental.stop(time + duration)
+  overtone.start(time)
+  overtone.stop(time + duration)
+}
+
+/** Classic cash-register "cha-ching" — two quick, bright bell strikes. */
 export function playCashRegister(): void {
   try {
     const ctx = getContext()
     const now = ctx.currentTime
-
-    const swipe = ctx.createBufferSource()
-    swipe.buffer = getNoiseBuffer(ctx)
-    const hp = ctx.createBiquadFilter()
-    hp.type = 'highpass'
-    hp.frequency.value = 3000
-    const swipeGain = ctx.createGain()
-    swipeGain.gain.setValueAtTime(0.18, now)
-    swipeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08)
-    swipe.connect(hp)
-    hp.connect(swipeGain)
-    swipeGain.connect(ctx.destination)
-    swipe.start(now)
-    swipe.stop(now + 0.08)
-    ;[1318.51, 1760].forEach((freq) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'triangle'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0, now + 0.06)
-      gain.gain.linearRampToValueAtTime(0.22, now + 0.08)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6)
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.start(now + 0.06)
-      osc.stop(now + 0.6)
-    })
+    bellStrike(ctx, now, 1567.98, 0.3, 0.3) // G6
+    bellStrike(ctx, now + 0.1, 2093.0, 0.45, 0.26) // C7
   } catch {
     // Web Audio unavailable — fail silently, sound is a nice-to-have.
   }

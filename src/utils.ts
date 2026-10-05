@@ -99,18 +99,52 @@ export function studentMonthTotal(
   )
 }
 
-export function monthPayoutKind(payouts: Payout[], studentId: string, month: string): PayoutKind | undefined {
-  return payouts.find((p) => p.studentId === studentId && p.month === month)?.kind
+export function monthPayouts(payouts: Payout[], studentId: string, month: string): Payout[] {
+  return payouts.filter((p) => p.studentId === studentId && p.month === month)
 }
 
-/** Sets a student's month to "paid" or "piggy"; clicking the already-active choice again clears it back to "not decided". */
-export function setPayoutKind(payouts: Payout[], studentId: string, month: string, kind: PayoutKind): Payout[] {
-  const withoutMonth = payouts.filter((p) => !(p.studentId === studentId && p.month === month))
-  if (monthPayoutKind(payouts, studentId, month) === kind) return withoutMonth
-  return [...withoutMonth, { id: uid(), studentId, month, kind, paidAt: new Date().toISOString().slice(0, 10) }]
+export function monthKindTotal(payouts: Payout[], studentId: string, month: string, kind: PayoutKind): number {
+  return monthPayouts(payouts, studentId, month)
+    .filter((p) => p.kind === kind)
+    .reduce((sum, p) => sum + p.amount, 0)
 }
 
-/** Every "piggy" month up to and including `uptoMonth` becomes "paid" — withdrawing the whole piggy bank balance. */
+export function monthDecidedTotal(payouts: Payout[], studentId: string, month: string): number {
+  return monthPayouts(payouts, studentId, month).reduce((sum, p) => sum + p.amount, 0)
+}
+
+/** How much of the month's total hasn't been assigned to "paid" or "piggy" yet. */
+export function monthRemaining(
+  assignments: Assignment[],
+  monthlyGrades: MonthlyGrade[],
+  bonuses: Bonus[],
+  payouts: Payout[],
+  studentId: string,
+  month: string,
+  baseAllowance: number,
+): number {
+  const total = studentMonthTotal(assignments, monthlyGrades, studentId, month, baseAllowance, bonuses)
+  return Math.max(0, total - monthDecidedTotal(payouts, studentId, month))
+}
+
+/** Records a new paid/piggy entry worth `amount` for the given month — a month's total can be split across several of these. */
+export function addPayout(
+  payouts: Payout[],
+  studentId: string,
+  month: string,
+  kind: PayoutKind,
+  amount: number,
+): Payout[] {
+  if (amount <= 0) return payouts
+  return [...payouts, { id: uid(), studentId, month, kind, amount, paidAt: new Date().toISOString().slice(0, 10) }]
+}
+
+/** Removes a single payout entry — for undoing a mistake. */
+export function removePayout(payouts: Payout[], id: string): Payout[] {
+  return payouts.filter((p) => p.id !== id)
+}
+
+/** Every "piggy" entry up to and including `uptoMonth` becomes "paid" — withdrawing the whole piggy bank balance. */
 export function emptyPiggyBank(payouts: Payout[], studentId: string, uptoMonth: string): Payout[] {
   const paidAt = new Date().toISOString().slice(0, 10)
   return payouts.map((p) =>
@@ -118,20 +152,11 @@ export function emptyPiggyBank(payouts: Payout[], studentId: string, uptoMonth: 
   )
 }
 
-/** Sum of a student's monthly totals, up to `uptoMonth`, currently routed into the piggy bank (and not yet withdrawn). */
-export function piggyBankBalance(
-  assignments: Assignment[],
-  monthlyGrades: MonthlyGrade[],
-  bonuses: Bonus[],
-  payouts: Payout[],
-  studentId: string,
-  baseAllowance: number,
-  uptoMonth: string = currentMonthKey(),
-): number {
-  const year = Number(uptoMonth.slice(0, 4))
-  return monthsOfYear(year)
-    .filter((m) => m <= uptoMonth && monthPayoutKind(payouts, studentId, m) === 'piggy')
-    .reduce((sum, m) => sum + studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance, bonuses), 0)
+/** Sum of "piggy" entries up to and including `uptoMonth` — the running, not-yet-withdrawn piggy bank balance. */
+export function piggyBankBalance(payouts: Payout[], studentId: string, uptoMonth: string = currentMonthKey()): number {
+  return payouts
+    .filter((p) => p.studentId === studentId && p.month <= uptoMonth && p.kind === 'piggy')
+    .reduce((sum, p) => sum + p.amount, 0)
 }
 
 export function monthsWithData(monthlyGrades: MonthlyGrade[], assignmentIds: string[]): string[] {
