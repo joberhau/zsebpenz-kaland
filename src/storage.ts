@@ -74,7 +74,8 @@ export function subscribeData(callback: (data: AppData) => void): () => void {
         absences: raw.absences ?? [],
         bonuses: raw.bonuses ?? [],
         homework: raw.homework ?? [],
-        payouts: raw.payouts ?? [],
+        // Older entries predate the "paid vs. piggy" choice and only ever meant "paid".
+        payouts: (raw.payouts ?? []).map((p) => ({ ...p, kind: p.kind ?? 'paid' })),
         notificationLeadMinutes: raw.notificationLeadMinutes ?? 60,
       })
     } else {

@@ -196,6 +196,35 @@ export function playBombSound(): void {
   }
 }
 
+function coinTing(ctx: AudioContext, time: number, freq: number, gainPeak = 0.2) {
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.type = 'triangle'
+  osc.frequency.setValueAtTime(freq, time)
+  osc.frequency.exponentialRampToValueAtTime(freq * 1.6, time + 0.05)
+  gain.gain.setValueAtTime(0, time)
+  gain.gain.linearRampToValueAtTime(gainPeak, time + 0.008)
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.22)
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.start(time)
+  osc.stop(time + 0.22)
+}
+
+/** Bright little coin-clink jingle — a few quick metallic tings, like coins dropping into a jar. */
+export function playCoinClink(): void {
+  try {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    coinTing(ctx, now, 1600)
+    coinTing(ctx, now + 0.07, 2000, 0.16)
+    coinTing(ctx, now + 0.15, 1800, 0.13)
+    coinTing(ctx, now + 0.24, 2200, 0.1)
+  } catch {
+    // Web Audio unavailable — fail silently, sound is a nice-to-have.
+  }
+}
+
 /** Procedurally synthesized ovation — claps, whistles and cartoon "whoop!" cheers. No audio assets needed. */
 export function playApplause(): void {
   try {

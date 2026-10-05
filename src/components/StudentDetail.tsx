@@ -8,7 +8,7 @@ import {
   currentMonthKey,
   formatHuf,
   gradeBasedTotal,
-  isMonthPaid,
+  monthPayoutKind,
   piggyBankBalance,
   studentMonthTotal,
 } from '../utils'
@@ -45,10 +45,8 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
   const bonusPositive = bonusMonthPositive(data.bonuses, studentId, month)
   const bonusNegative = bonusMonthNegative(data.bonuses, studentId, month)
   const total = studentMonthTotal(data.assignments, data.monthlyGrades, studentId, month, baseAllowance, data.bonuses)
-  const paid = isMonthPaid(data.payouts, studentId, month)
-  const piggy = student.savingsMode
-    ? piggyBankBalance(data.assignments, data.monthlyGrades, data.bonuses, data.payouts, studentId, baseAllowance, month)
-    : 0
+  const payoutKind = monthPayoutKind(data.payouts, studentId, month)
+  const piggy = piggyBankBalance(data.assignments, data.monthlyGrades, data.bonuses, data.payouts, studentId, baseAllowance, month)
 
   return (
     <div>
@@ -102,18 +100,19 @@ export default function StudentDetail({ studentId, data, onBack, onUpdateData, o
               {bonusNegative > 0 && <div className="text-bubblegum">Levonás: -{formatHuf(bonusNegative)}</div>}
             </div>
           )}
-          {student.savingsMode ? (
+          {piggy > 0 && (
             <div className="flex items-center justify-between pt-2 mt-2 border-t border-black/10">
               <span className="text-sm font-bold text-slate-600">🐷 Malacperselyben</span>
               <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(piggy)}</span>
             </div>
-          ) : (
+          )}
+          {payoutKind && (
             <span
               className={`inline-block mt-2 text-xs font-bold px-2.5 py-1 rounded-full ${
-                paid ? 'bg-mint text-white' : 'bg-white/60 text-slate-500'
+                payoutKind === 'paid' ? 'bg-mint text-white' : 'bg-tangerine text-white'
               }`}
             >
-              {paid ? '✅ Kifizetve' : '⏳ Fizetésre vár'}
+              {payoutKind === 'paid' ? '✅ Kifizetve' : '🐷 Malacba téve'}
             </span>
           )}
         </div>

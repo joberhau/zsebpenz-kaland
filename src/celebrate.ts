@@ -1,7 +1,7 @@
 import confetti from 'canvas-confetti'
 import type { Grade } from './types'
 import { GRADE_COLORS } from './utils'
-import { playFireworkBoom } from './sound'
+import { playCoinClink, playFireworkBoom } from './sound'
 
 // canvas-confetti's runtime supports shapeFromText (used to draw emoji particles),
 // but the bundled @types package doesn't declare it yet.
@@ -94,6 +94,24 @@ function fireworks(): void {
   }
 
   tick()
+}
+
+/** A little handful of gold coins drops and jingles from the clicked button — played on every payout decision. */
+export function celebrateCoinDrop(el: HTMLElement): void {
+  playCoinClink()
+  const rect = el.getBoundingClientRect()
+  const x = (rect.left + rect.width / 2) / window.innerWidth
+  const y = Math.max(0, (rect.top + rect.height / 2) / window.innerHeight - 0.03)
+  confetti({
+    particleCount: 16,
+    startVelocity: 20,
+    gravity: 1.3,
+    spread: 55,
+    ticks: 90,
+    scalar: 1.5,
+    shapes: [getShape('🪙', 1.5)] as never,
+    origin: { x, y },
+  })
 }
 
 /** Bomb explosion for a fail (1), sad rain for a near-fail (2), confetti for 3-4, fireworks for a 5. */

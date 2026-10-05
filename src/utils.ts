@@ -1,4 +1,4 @@
-import type { Activity, Assignment, Bonus, MonthlyGrade, Payout, StudentColor, TimetableEntry } from './types'
+import type { Activity, Assignment, Bonus, MonthlyGrade, Payout, PayoutKind, StudentColor, TimetableEntry } from './types'
 import { uid } from './storage'
 
 export function formatHuf(amount: number): string {
@@ -99,29 +99,26 @@ export function studentMonthTotal(
   )
 }
 
-export function isMonthPaid(payouts: Payout[], studentId: string, month: string): boolean {
-  return payouts.some((p) => p.studentId === studentId && p.month === month)
+export function monthPayoutKind(payouts: Payout[], studentId: string, month: string): PayoutKind | undefined {
+  return payouts.find((p) => p.studentId === studentId && p.month === month)?.kind
 }
 
-/** Adds or removes a payout entry for the given student+month, marking it as paid/unpaid. */
-export function togglePayout(payouts: Payout[], studentId: string, month: string): Payout[] {
-  if (isMonthPaid(payouts, studentId, month)) {
-    return payouts.filter((p) => !(p.studentId === studentId && p.month === month))
-  }
-  return [...payouts, { id: uid(), studentId, month, paidAt: new Date().toISOString().slice(0, 10) }]
+/** Sets a student's month to "paid" or "piggy"; clicking the already-active choice again clears it back to "not decided". */
+export function setPayoutKind(payouts: Payout[], studentId: string, month: string, kind: PayoutKind): Payout[] {
+  const withoutMonth = payouts.filter((p) => !(p.studentId === studentId && p.month === month))
+  if (monthPayoutKind(payouts, studentId, month) === kind) return withoutMonth
+  return [...withoutMonth, { id: uid(), studentId, month, kind, paidAt: new Date().toISOString().slice(0, 10) }]
 }
 
-/** Marks every not-yet-paid month up to and including `uptoMonth` as paid — "emptying" the piggy bank. */
+/** Every "piggy" month up to and including `uptoMonth` becomes "paid" — withdrawing the whole piggy bank balance. */
 export function emptyPiggyBank(payouts: Payout[], studentId: string, uptoMonth: string): Payout[] {
-  const year = Number(uptoMonth.slice(0, 4))
   const paidAt = new Date().toISOString().slice(0, 10)
-  const newEntries: Payout[] = monthsOfYear(year)
-    .filter((m) => m <= uptoMonth && !isMonthPaid(payouts, studentId, m))
-    .map((m) => ({ id: uid(), studentId, month: m, paidAt }))
-  return [...payouts, ...newEntries]
+  return payouts.map((p) =>
+    p.studentId === studentId && p.month <= uptoMonth && p.kind === 'piggy' ? { ...p, kind: 'paid', paidAt } : p,
+  )
 }
 
-/** Sum of a student's monthly totals, up to `uptoMonth`, that haven't been paid out yet — the running "malacpersely" balance. */
+/** Sum of a student's monthly totals, up to `uptoMonth`, currently routed into the piggy bank (and not yet withdrawn). */
 export function piggyBankBalance(
   assignments: Assignment[],
   monthlyGrades: MonthlyGrade[],
@@ -133,7 +130,7 @@ export function piggyBankBalance(
 ): number {
   const year = Number(uptoMonth.slice(0, 4))
   return monthsOfYear(year)
-    .filter((m) => m <= uptoMonth && !isMonthPaid(payouts, studentId, m))
+    .filter((m) => m <= uptoMonth && monthPayoutKind(payouts, studentId, m) === 'piggy')
     .reduce((sum, m) => sum + studentMonthTotal(assignments, monthlyGrades, studentId, m, baseAllowance, bonuses), 0)
 }
 

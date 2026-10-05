@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Assignment, Bonus, Grade, MonthlyGrade, Payout, StudentColor, Subject } from '../types'
 import { uid } from '../storage'
 import { playApplause, playBombSound, playGameOverJingle, playGradeSound } from '../sound'
-import { celebrateGrade } from '../celebrate'
+import { celebrateCoinDrop, celebrateGrade } from '../celebrate'
 import {
   GRADE_COLORS,
   STUDENT_COLORS,
@@ -15,11 +15,11 @@ import {
   formatMonthLabel,
   formatMonthShort,
   gradeForAssignment,
-  isMonthPaid,
+  monthPayoutKind,
   monthsOfYear,
+  setPayoutKind,
   shiftMonth,
   studentMonthTotal,
-  togglePayout,
 } from '../utils'
 
 interface MonthlyGradesProps {
@@ -58,7 +58,7 @@ export default function MonthlyGrades({
   const bonusPositive = bonusMonthPositive(bonuses, studentId, selectedMonth)
   const bonusNegative = bonusMonthNegative(bonuses, studentId, selectedMonth)
   const total = studentMonthTotal(assignments, monthlyGrades, studentId, selectedMonth, baseAllowance, bonuses)
-  const paid = isMonthPaid(payouts, studentId, selectedMonth)
+  const payoutKind = monthPayoutKind(payouts, studentId, selectedMonth)
 
   function setGrade(assignmentId: string, grade: Grade) {
     const existing = gradeForAssignment(monthlyGrades, assignmentId, selectedMonth)
@@ -186,14 +186,30 @@ export default function MonthlyGrades({
             {bonusNegative > 0 && <div className="text-bubblegum">Levonás: -{formatHuf(bonusNegative)}</div>}
           </div>
         )}
-        <button
-          onClick={() => onChangePayouts(togglePayout(payouts, studentId, selectedMonth))}
-          className={`mt-3 w-full py-2.5 rounded-xl font-display font-bold btn-pop ${
-            paid ? 'bg-mint text-white' : 'bg-white/70 text-slate-500'
-          }`}
-        >
-          {paid ? '✅ Kifizetve' : '⏳ Kifizetés jelölése'}
-        </button>
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={(e) => {
+              onChangePayouts(setPayoutKind(payouts, studentId, selectedMonth, 'paid'))
+              celebrateCoinDrop(e.currentTarget)
+            }}
+            className={`flex-1 py-2.5 rounded-xl font-display font-bold btn-pop ${
+              payoutKind === 'paid' ? 'bg-mint text-white' : 'bg-white/70 text-slate-500'
+            }`}
+          >
+            💶 Kifizetem
+          </button>
+          <button
+            onClick={(e) => {
+              onChangePayouts(setPayoutKind(payouts, studentId, selectedMonth, 'piggy'))
+              celebrateCoinDrop(e.currentTarget)
+            }}
+            className={`flex-1 py-2.5 rounded-xl font-display font-bold btn-pop ${
+              payoutKind === 'piggy' ? 'bg-tangerine text-white' : 'bg-white/70 text-slate-500'
+            }`}
+          >
+            🐷 Malacba teszem
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl border-4 border-slate-100 p-5 sm:p-6">

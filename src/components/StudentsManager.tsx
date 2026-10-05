@@ -7,15 +7,8 @@ import StudentFormModal from './StudentFormModal'
 interface StudentsManagerProps {
   students: Student[]
   onSelectStudent: (id: string) => void
-  onCreate: (name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number, savingsMode: boolean) => void
-  onUpdate: (
-    id: string,
-    name: string,
-    avatar: AvatarId,
-    color: StudentColor,
-    baseAllowance: number,
-    savingsMode: boolean,
-  ) => void
+  onCreate: (name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) => void
+  onUpdate: (id: string, name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) => void
   onDelete: (id: string) => void
 }
 
@@ -102,8 +95,8 @@ export default function StudentsManager({
       {modal === 'add' && (
         <StudentFormModal
           onCancel={() => setModal(null)}
-          onSave={(name, avatar, color, baseAllowance, savingsMode) => {
-            onCreate(name, avatar, color, baseAllowance, savingsMode)
+          onSave={(name, avatar, color, baseAllowance) => {
+            onCreate(name, avatar, color, baseAllowance)
             setModal(null)
           }}
         />
@@ -112,8 +105,8 @@ export default function StudentsManager({
         <StudentFormModal
           initial={modal}
           onCancel={() => setModal(null)}
-          onSave={(name, avatar, color, baseAllowance, savingsMode) => {
-            onUpdate(modal.id, name, avatar, color, baseAllowance, savingsMode)
+          onSave={(name, avatar, color, baseAllowance) => {
+            onUpdate(modal.id, name, avatar, color, baseAllowance)
             setModal(null)
           }}
         />

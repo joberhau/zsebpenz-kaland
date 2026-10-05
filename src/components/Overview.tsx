@@ -14,16 +14,17 @@ import {
   formatMonthLabel,
   formatMonthShort,
   gradeBasedTotal,
-  isMonthPaid,
+  monthPayoutKind,
   monthsOfYear,
   piggyBankBalance,
+  setPayoutKind,
   shiftMonth,
   studentMonthTotal,
   todayDayOfWeek,
   todaysActivities,
   todaysTimetable,
-  togglePayout,
 } from '../utils'
+import { celebrateCoinDrop } from '../celebrate'
 import { Avatar } from './Avatars'
 import PushSettingsModal from './PushSettingsModal'
 
@@ -45,11 +46,17 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
   const [headlineOffset, setHeadlineOffset] = useState(loadHeadlineOffset)
   const [showPushSettings, setShowPushSettings] = useState(false)
   const [dayByStudent, setDayByStudent] = useState<Record<string, number>>({})
+  const [bouncingPig, setBouncingPig] = useState<string | null>(null)
   const currentYear = new Date().getFullYear()
   const yearMonths = monthsOfYear(currentYear)
   const headlineMonth = shiftMonth(currentMonthKey(), headlineOffset)
   const today = todayDayOfWeek()
   const defaultDay = SCHOOL_DAY_ORDER.includes(today) ? today : SCHOOL_DAY_ORDER[0]
+
+  function bouncePig(studentId: string) {
+    setBouncingPig(studentId)
+    window.setTimeout(() => setBouncingPig((current) => (current === studentId ? null : current)), 500)
+  }
 
   function shiftDay(studentId: string, delta: number) {
     setDayByStudent((prev) => {
@@ -145,18 +152,17 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                 baseAllowance,
                 data.bonuses,
               )
-              const paid = isMonthPaid(data.payouts, student.id, headlineMonth)
-              const piggy = student.savingsMode
-                ? piggyBankBalance(
-                    data.assignments,
-                    data.monthlyGrades,
-                    data.bonuses,
-                    data.payouts,
-                    student.id,
-                    baseAllowance,
-                    headlineMonth,
-                  )
-                : 0
+              const payoutKind = monthPayoutKind(data.payouts, student.id, headlineMonth)
+              const piggy = piggyBankBalance(
+                data.assignments,
+                data.monthlyGrades,
+                data.bonuses,
+                data.payouts,
+                student.id,
+                baseAllowance,
+                headlineMonth,
+              )
+              const piggyScale = Math.min(1.6, 1 + piggy / 20000)
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
               const todayActivities = todaysActivities(data.activities, student.id)
               const todayClassCount = todaysTimetable(data.timetable, student.id).length
@@ -320,37 +326,62 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                       </div>
                     )}
 
-                    {student.savingsMode ? (
-                      <div className="rounded-2xl bg-lemon/30 px-4 py-3 mt-2 flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold text-slate-600 shrink-0">🐷 Perselyben</span>
-                        <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(piggy)}</span>
-                        {piggy > 0 && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onUpdateData({ payouts: emptyPiggyBank(data.payouts, student.id, headlineMonth) })
-                            }}
-                            className="shrink-0 text-xs font-bold text-slate-500 bg-white px-2.5 py-1.5 rounded-full hover:text-grape"
-                            title="Perselyben gyűlt összeg kifizetése"
-                          >
-                            Kiürítés
-                          </button>
-                        )}
-                      </div>
-                    ) : (
+                    <div className="flex gap-1.5 mt-2">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          onUpdateData({ payouts: togglePayout(data.payouts, student.id, headlineMonth) })
+                          onUpdateData({ payouts: setPayoutKind(data.payouts, student.id, headlineMonth, 'paid') })
+                          celebrateCoinDrop(e.currentTarget)
                         }}
-                        className={`mt-2 text-xs font-bold px-2.5 py-1.5 rounded-full ${
-                          paid ? 'bg-mint text-white' : 'bg-slate-100 text-slate-500'
+                        className={`flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full ${
+                          payoutKind === 'paid' ? 'bg-mint text-white' : 'bg-slate-100 text-slate-500'
                         }`}
                       >
-                        {paid ? '✅ Kifizetve' : '⏳ Fizetésre vár'}
+                        💶 Kifizetem
                       </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUpdateData({ payouts: setPayoutKind(data.payouts, student.id, headlineMonth, 'piggy') })
+                          celebrateCoinDrop(e.currentTarget)
+                          bouncePig(student.id)
+                        }}
+                        className={`flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full ${
+                          payoutKind === 'piggy' ? 'bg-tangerine text-white' : 'bg-slate-100 text-slate-500'
+                        }`}
+                      >
+                        🐷 Malacba
+                      </button>
+                    </div>
+
+                    {piggy > 0 && (
+                      <div className="rounded-2xl bg-lemon/30 px-4 py-3 mt-2 flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-1.5 text-sm font-bold text-slate-600 shrink-0">
+                          <span
+                            className="inline-block"
+                            style={{ transform: `scale(${piggyScale})`, transition: 'transform 0.3s ease' }}
+                          >
+                            <span className={`inline-block ${bouncingPig === student.id ? 'animate-pig-bounce' : ''}`}>
+                              🐷
+                            </span>
+                          </span>
+                          Perselyben
+                        </span>
+                        <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(piggy)}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onUpdateData({ payouts: emptyPiggyBank(data.payouts, student.id, headlineMonth) })
+                          }}
+                          className="shrink-0 text-xs font-bold text-slate-500 bg-white px-2.5 py-1.5 rounded-full hover:text-grape"
+                          title="Perselyben gyűlt összeg kifizetése"
+                        >
+                          Kiürítés
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

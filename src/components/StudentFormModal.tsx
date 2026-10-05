@@ -6,7 +6,7 @@ import { AVATARS } from './Avatars'
 interface StudentFormModalProps {
   initial?: Student
   onCancel: () => void
-  onSave: (name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number, savingsMode: boolean) => void
+  onSave: (name: string, avatar: AvatarId, color: StudentColor, baseAllowance: number) => void
 }
 
 const COLORS: StudentColor[] = ['grape', 'bubblegum', 'tangerine', 'mint', 'sky']
@@ -16,7 +16,6 @@ export default function StudentFormModal({ initial, onCancel, onSave }: StudentF
   const [avatar, setAvatar] = useState<AvatarId>(initial?.avatar ?? 'girl')
   const [color, setColor] = useState<StudentColor>(initial?.color ?? 'grape')
   const [baseAllowance, setBaseAllowance] = useState(String(initial?.baseAllowance ?? 0))
-  const [savingsMode, setSavingsMode] = useState(initial?.savingsMode ?? false)
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-6 z-50 overflow-y-auto">
@@ -75,31 +74,8 @@ export default function StudentFormModal({ initial, onCancel, onSave }: StudentF
           value={baseAllowance}
           onChange={(e) => setBaseAllowance(e.target.value)}
           placeholder="0"
-          className="w-full mt-1 mb-4 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-grape focus:outline-none"
+          className="w-full mt-1 mb-6 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-grape focus:outline-none"
         />
-
-        <button
-          type="button"
-          onClick={() => setSavingsMode((v) => !v)}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 mb-6 text-left ${
-            savingsMode ? 'border-grape bg-grape/10' : 'border-slate-200 bg-slate-50'
-          }`}
-        >
-          <span className="text-2xl">🐷</span>
-          <span className="flex-1">
-            <span className="block font-semibold text-slate-700">Malacperselybe gyűjtjük</span>
-            <span className="block text-xs text-slate-400">
-              Nem fizetjük ki havonta — a csempén összegyűlve látjuk, amíg ki nem vesszük.
-            </span>
-          </span>
-          <span
-            className={`w-6 h-6 rounded-full border-2 shrink-0 flex items-center justify-center text-xs font-bold ${
-              savingsMode ? 'bg-grape border-grape text-white' : 'border-slate-300 text-transparent'
-            }`}
-          >
-            ✓
-          </span>
-        </button>
 
         <div className="flex gap-3">
           <button
@@ -110,8 +86,7 @@ export default function StudentFormModal({ initial, onCancel, onSave }: StudentF
           </button>
           <button
             onClick={() =>
-              name.trim() &&
-              onSave(name.trim(), avatar, color, Math.max(0, Number(baseAllowance) || 0), savingsMode)
+              name.trim() && onSave(name.trim(), avatar, color, Math.max(0, Number(baseAllowance) || 0))
             }
             disabled={!name.trim()}
             className="btn-pop flex-1 py-3 rounded-2xl font-display font-bold text-white bg-mint shadow-pop disabled:opacity-40"

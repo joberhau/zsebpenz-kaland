@@ -18,8 +18,6 @@ export interface Student {
   color: StudentColor
   /** Fixed monthly allowance (Ft), independent of grades — grade-based payout adds on top. */
   baseAllowance: number
-  /** If true, the monthly amount isn't handed over each month — it accumulates as shown "malacpersely" savings until paid out. */
-  savingsMode?: boolean
 }
 
 /** A subject assigned to a student, with its own grade -> Ft reward table. */
@@ -87,12 +85,15 @@ export interface Homework {
   text: string
 }
 
-/** Marks a given student's month as paid out (handed over in cash/transferred). Absence = not yet paid. */
+export type PayoutKind = 'paid' | 'piggy'
+
+/** Records what happened to a given student's month: handed over in cash ("paid") or routed into the malacpersely ("piggy"). Absence = not decided yet. */
 export interface Payout {
   id: string
   studentId: string
   month: string // "yyyy-mm"
-  paidAt: string // "yyyy-mm-dd"
+  kind: PayoutKind
+  paidAt: string // "yyyy-mm-dd" — when the decision was made
 }
 
 export interface AppData {
