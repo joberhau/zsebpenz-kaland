@@ -144,6 +144,11 @@ export function removePayout(payouts: Payout[], id: string): Payout[] {
   return payouts.filter((p) => p.id !== id)
 }
 
+/** Clears every payout entry for a student's month in one go — resets a botched split back to "not decided". */
+export function clearMonthPayouts(payouts: Payout[], studentId: string, month: string): Payout[] {
+  return payouts.filter((p) => !(p.studentId === studentId && p.month === month))
+}
+
 /** Every "piggy" entry up to and including `uptoMonth` becomes "paid" — withdrawing the whole piggy bank balance. */
 export function emptyPiggyBank(payouts: Payout[], studentId: string, uptoMonth: string): Payout[] {
   const paidAt = new Date().toISOString().slice(0, 10)

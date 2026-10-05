@@ -8,6 +8,7 @@ import {
   bonusMonthNegative,
   bonusMonthPositive,
   bonusMonthTotal,
+  clearMonthPayouts,
   currentMonthKey,
   emptyPiggyBank,
   formatHuf,
@@ -180,6 +181,7 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                 0,
                 Math.min(remaining, Number(amountByStudent[student.id] ?? remaining) || 0),
               )
+              const hasDecision = total > 0 && remaining < total
               const piggy = piggyBankBalance(data.payouts, student.id, headlineMonth)
               const piggyScale = Math.min(1.6, 1 + piggy / 20000)
               const subjectCount = data.assignments.filter((a) => a.studentId === student.id).length
@@ -389,6 +391,21 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                           className="flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-500 disabled:opacity-40"
                         >
                           🐷 Malacba
+                        </button>
+                      </div>
+                    )}
+
+                    {hasDecision && (
+                      <div className="flex justify-end mt-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateData({ payouts: clearMonthPayouts(data.payouts, student.id, headlineMonth) })
+                          }
+                          className="text-[11px] font-bold text-slate-400 hover:text-bubblegum"
+                          title="Ennek a hónapnak az összes döntésének visszavonása"
+                        >
+                          ↺ Alaphelyzet
                         </button>
                       </div>
                     )}
