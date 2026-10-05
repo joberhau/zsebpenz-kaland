@@ -190,7 +190,7 @@ export default function MonthlyGrades({
           <button
             onClick={(e) => {
               onChangePayouts(setPayoutKind(payouts, studentId, selectedMonth, 'paid'))
-              celebrateCoinDrop(e.currentTarget)
+              celebrateCoinDrop(e.currentTarget, 'paid')
             }}
             className={`flex-1 py-2.5 rounded-xl font-display font-bold btn-pop ${
               payoutKind === 'paid' ? 'bg-mint text-white' : 'bg-white/70 text-slate-500'
@@ -201,7 +201,7 @@ export default function MonthlyGrades({
           <button
             onClick={(e) => {
               onChangePayouts(setPayoutKind(payouts, studentId, selectedMonth, 'piggy'))
-              celebrateCoinDrop(e.currentTarget)
+              celebrateCoinDrop(e.currentTarget, 'piggy')
             }}
             className={`flex-1 py-2.5 rounded-xl font-display font-bold btn-pop ${
               payoutKind === 'piggy' ? 'bg-tangerine text-white' : 'bg-white/70 text-slate-500'

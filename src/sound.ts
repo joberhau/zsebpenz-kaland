@@ -225,6 +225,74 @@ export function playCoinClink(): void {
   }
 }
 
+/** Classic cash-register "cha-ching" — a quick swipe of noise followed by a ringing two-tone bell. */
+export function playCashRegister(): void {
+  try {
+    const ctx = getContext()
+    const now = ctx.currentTime
+
+    const swipe = ctx.createBufferSource()
+    swipe.buffer = getNoiseBuffer(ctx)
+    const hp = ctx.createBiquadFilter()
+    hp.type = 'highpass'
+    hp.frequency.value = 3000
+    const swipeGain = ctx.createGain()
+    swipeGain.gain.setValueAtTime(0.18, now)
+    swipeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08)
+    swipe.connect(hp)
+    hp.connect(swipeGain)
+    swipeGain.connect(ctx.destination)
+    swipe.start(now)
+    swipe.stop(now + 0.08)
+    ;[1318.51, 1760].forEach((freq) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'triangle'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0, now + 0.06)
+      gain.gain.linearRampToValueAtTime(0.22, now + 0.08)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now + 0.06)
+      osc.stop(now + 0.6)
+    })
+  } catch {
+    // Web Audio unavailable — fail silently, sound is a nice-to-have.
+  }
+}
+
+function pigHonk(ctx: AudioContext, start: number, duration: number, freqFrom: number, freqTo: number) {
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  const filter = ctx.createBiquadFilter()
+  osc.type = 'sawtooth'
+  osc.frequency.setValueAtTime(freqFrom, start)
+  osc.frequency.exponentialRampToValueAtTime(freqTo, start + duration * 0.7)
+  filter.type = 'lowpass'
+  filter.frequency.value = 900
+  gain.gain.setValueAtTime(0, start)
+  gain.gain.linearRampToValueAtTime(0.28, start + 0.02)
+  gain.gain.exponentialRampToValueAtTime(0.001, start + duration)
+  osc.connect(filter)
+  filter.connect(gain)
+  gain.connect(ctx.destination)
+  osc.start(start)
+  osc.stop(start + duration)
+}
+
+/** A happy little pig "oink-oink" — played when money gets put into the piggy bank. */
+export function playOink(): void {
+  try {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    pigHonk(ctx, now, 0.14, 230, 140)
+    pigHonk(ctx, now + 0.17, 0.1, 190, 115)
+  } catch {
+    // Web Audio unavailable — fail silently, sound is a nice-to-have.
+  }
+}
+
 /** Procedurally synthesized ovation — claps, whistles and cartoon "whoop!" cheers. No audio assets needed. */
 export function playApplause(): void {
   try {

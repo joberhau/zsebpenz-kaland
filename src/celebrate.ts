@@ -1,7 +1,7 @@
 import confetti from 'canvas-confetti'
-import type { Grade } from './types'
+import type { Grade, PayoutKind } from './types'
 import { GRADE_COLORS } from './utils'
-import { playCoinClink, playFireworkBoom } from './sound'
+import { playCashRegister, playCoinClink, playFireworkBoom, playOink } from './sound'
 
 // canvas-confetti's runtime supports shapeFromText (used to draw emoji particles),
 // but the bundled @types package doesn't declare it yet.
@@ -96,9 +96,14 @@ function fireworks(): void {
   tick()
 }
 
-/** A little handful of gold coins drops and jingles from the clicked button — played on every payout decision. */
-export function celebrateCoinDrop(el: HTMLElement): void {
-  playCoinClink()
+/** A little handful of gold coins drops from the clicked button — "paid" rings the cash register, "piggy" clinks a coin and oinks. */
+export function celebrateCoinDrop(el: HTMLElement, kind: PayoutKind): void {
+  if (kind === 'paid') {
+    playCashRegister()
+  } else {
+    playCoinClink()
+    window.setTimeout(playOink, 180)
+  }
   const rect = el.getBoundingClientRect()
   const x = (rect.left + rect.width / 2) / window.innerWidth
   const y = Math.max(0, (rect.top + rect.height / 2) / window.innerHeight - 0.03)

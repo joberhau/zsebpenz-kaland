@@ -332,7 +332,7 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                         onClick={(e) => {
                           e.stopPropagation()
                           onUpdateData({ payouts: setPayoutKind(data.payouts, student.id, headlineMonth, 'paid') })
-                          celebrateCoinDrop(e.currentTarget)
+                          celebrateCoinDrop(e.currentTarget, 'paid')
                         }}
                         className={`flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full ${
                           payoutKind === 'paid' ? 'bg-mint text-white' : 'bg-slate-100 text-slate-500'
@@ -345,7 +345,7 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                         onClick={(e) => {
                           e.stopPropagation()
                           onUpdateData({ payouts: setPayoutKind(data.payouts, student.id, headlineMonth, 'piggy') })
-                          celebrateCoinDrop(e.currentTarget)
+                          celebrateCoinDrop(e.currentTarget, 'piggy')
                           bouncePig(student.id)
                         }}
                         className={`flex-1 text-xs font-bold px-2.5 py-1.5 rounded-full ${
@@ -355,6 +355,13 @@ export default function Overview({ data, onSelectStudent, onLogout, onUpdateData
                         🐷 Malacba
                       </button>
                     </div>
+
+                    {payoutKind === 'paid' && (
+                      <div className="rounded-2xl bg-mint/20 px-4 py-3 mt-2 flex items-center justify-between gap-2">
+                        <span className="text-sm font-bold text-slate-600">✅ Kifizetve</span>
+                        <span className="font-display text-lg font-extrabold text-slate-700">{formatHuf(total)}</span>
+                      </div>
+                    )}
 
                     {piggy > 0 && (
                       <div className="rounded-2xl bg-lemon/30 px-4 py-3 mt-2 flex items-center justify-between gap-2">
